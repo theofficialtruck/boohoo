@@ -1,4 +1,4 @@
-import { game, interact, keys, startGame, update } from './game'
+import { game, interact, keys, squeak, startGame, update } from './game'
 import { draw } from './draw'
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!
@@ -22,6 +22,10 @@ window.addEventListener('keydown', (e) => {
   // e.repeat is true while the key is held, so one press means one action
   if (e.key.toLowerCase() === 'e' && !e.repeat && game.screen === 'playing') {
     interact()
+  }
+
+  if (e.key.toLowerCase() === 'q' && !e.repeat && game.screen === 'playing') {
+    squeak()
   }
 })
 

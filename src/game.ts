@@ -7,6 +7,10 @@ const REACH = 60
 export const LAMP_X = 495
 export const LAMP_Y = 243
 
+const TOY_FLOOR_Y = 425
+export const BALL_Y = 458
+export const BALL_RADIUS = 12
+
 export const game = {
   screen: 'title', // 'title' | 'playing'
   time: 0,
@@ -14,6 +18,21 @@ export const game = {
   ghostY: 0,
   ghostLean: 0,
   lampFlicker: 0, // seconds of flickering left
+
+  // the toy's x/y is the bottom of its feet
+  toyState: 'shelf', // 'shelf' | 'falling' | 'floor'
+  toyX: 0,
+  toyY: 0,
+  toyVX: 0,
+  toyVY: 0,
+  toyAngle: 0,
+  toyWobble: 0,
+
+  ballX: 0,
+  ballSpeed: 0,
+  ballSpin: 0,
+
+  squeakTimer: 0,
 }
 
 export const keys: Record<string, boolean> = {}
@@ -24,6 +43,20 @@ export function startGame() {
   game.ghostY = 240
   game.ghostLean = 0
   game.lampFlicker = 0
+
+  game.toyState = 'shelf'
+  game.toyX = 110
+  game.toyY = 104
+  game.toyVX = 0
+  game.toyVY = 0
+  game.toyAngle = 0
+  game.toyWobble = 0
+
+  game.ballX = 330
+  game.ballSpeed = 0
+  game.ballSpin = 0
+
+  game.squeakTimer = 0
 }
 
 function distance(x1: number, y1: number, x2: number, y2: number) {
@@ -34,6 +67,12 @@ export function nearbyObject() {
   if (distance(game.ghostX, game.ghostY, LAMP_X, LAMP_Y) < REACH) {
     return 'lamp'
   }
+  if (distance(game.ghostX, game.ghostY, game.toyX, game.toyY - 15) < REACH) {
+    return 'toy'
+  }
+  if (distance(game.ghostX, game.ghostY, game.ballX, BALL_Y) < REACH) {
+    return 'ball'
+  }
   return ''
 }
 
@@ -42,6 +81,28 @@ export function interact() {
 
   if (thing === 'lamp' && game.lampFlicker <= 0) {
     game.lampFlicker = 1.2
+  }
+
+  if (thing === 'toy') {
+    if (game.toyState === 'shelf') {
+      // little hop off the edge, then gravity does the rest
+      game.toyState = 'falling'
+      game.toyVX = 45
+      game.toyVY = -150
+    } else if (game.toyState === 'floor' && game.toyWobble <= 0) {
+      game.toyWobble = 0.8
+    }
+  }
+
+  if (thing === 'ball' && game.ballSpeed === 0) {
+    // push the ball away from the ghost
+    game.ballSpeed = game.ghostX <= game.ballX ? 300 : -300
+  }
+}
+
+export function squeak() {
+  if (game.squeakTimer <= 0) {
+    game.squeakTimer = 0.7
   }
 }
 
@@ -54,6 +115,46 @@ export function update(dt: number) {
 
   if (game.lampFlicker > 0) {
     game.lampFlicker -= dt
+  }
+  if (game.toyWobble > 0) {
+    game.toyWobble -= dt
+  }
+  if (game.squeakTimer > 0) {
+    game.squeakTimer -= dt
+  }
+
+  if (game.toyState === 'falling') {
+    game.toyVY += 900 * dt
+    game.toyX += game.toyVX * dt
+    game.toyY += game.toyVY * dt
+    game.toyAngle += 5 * dt
+
+    if (game.toyY >= TOY_FLOOR_Y) {
+      game.toyY = TOY_FLOOR_Y
+      game.toyAngle = Math.PI / 2
+      game.toyState = 'floor'
+      game.toyWobble = 0.5
+    }
+  }
+
+  if (game.ballSpeed !== 0) {
+    game.ballX += game.ballSpeed * dt
+    game.ballSpin += (game.ballSpeed * dt) / BALL_RADIUS
+    game.ballSpeed -= game.ballSpeed * 1.4 * dt
+
+    // bounce off the walls
+    if (game.ballX < 20) {
+      game.ballX = 20
+      game.ballSpeed = -game.ballSpeed * 0.6
+    }
+    if (game.ballX > WIDTH - 20) {
+      game.ballX = WIDTH - 20
+      game.ballSpeed = -game.ballSpeed * 0.6
+    }
+
+    if (Math.abs(game.ballSpeed) < 8) {
+      game.ballSpeed = 0
+    }
   }
 
   let dx = 0

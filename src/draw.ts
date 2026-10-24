@@ -1,4 +1,4 @@
-import { game, WIDTH, HEIGHT, LAMP_X, LAMP_Y, nearbyObject } from './game'
+import { game, WIDTH, HEIGHT, LAMP_X, LAMP_Y, BALL_Y, BALL_RADIUS, nearbyObject } from './game'
 
 const FLOOR_Y = 390
 
@@ -18,6 +18,7 @@ const HAIR = '#2a2350'
 const LAVENDER = '#c9b8f7'
 const GHOST_EYE = '#1b1640'
 const LAMP_LIGHT = '#ffd97a'
+const BALL = '#7d8ad8'
 
 function rect(ctx: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = color
@@ -39,13 +40,70 @@ export function draw(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = 'rgba(8, 11, 30, 0.4)'
     ctx.fillRect(0, 0, WIDTH, HEIGHT)
     drawTitle(ctx)
-    drawGhost(ctx, 130, 440, Math.sin(game.time) * 0.15, 2.4)
+    drawGhost(ctx, 130, 440, Math.sin(game.time) * 0.15, 2.4, 0)
   }
 
   if (game.screen === 'playing') {
-    drawGhost(ctx, game.ghostX, game.ghostY, game.ghostLean, 1)
+    drawToy(ctx)
+    drawBall(ctx)
+    // 0 to 1, peaks in the middle of the squeak
+    const squish = game.squeakTimer > 0 ? Math.sin((game.squeakTimer / 0.7) * Math.PI) : 0
+    drawGhost(ctx, game.ghostX, game.ghostY, game.ghostLean, 1, squish)
+    drawBoo(ctx)
     drawPrompt(ctx)
   }
+}
+
+function drawToy(ctx: CanvasRenderingContext2D) {
+  const wobble = game.toyWobble > 0 ? Math.sin(game.toyWobble * 40) * 0.25 * game.toyWobble : 0
+
+  ctx.save()
+  ctx.translate(game.toyX, game.toyY)
+  ctx.rotate(game.toyAngle + wobble)
+
+  // a little wind up robot, drawn upwards from its feet
+  rect(ctx, SLATE, -7, -6, 5, 6)
+  rect(ctx, SLATE, 2, -6, 5, 6)
+  rect(ctx, SLATE_LIGHT, -9, -20, 18, 14)
+  rect(ctx, SLATE_LIGHT, -7, -31, 14, 11)
+  circle(ctx, MOON, -3, -26, 1.8)
+  circle(ctx, MOON, 3, -26, 1.8)
+  rect(ctx, SLATE, -1, -36, 2, 5)
+  circle(ctx, LAMP_LIGHT, 0, -37, 2.2)
+  rect(ctx, SLATE, 9, -15, 4, 3)
+  rect(ctx, SLATE, 12, -18, 2, 9)
+
+  ctx.restore()
+}
+
+function drawBall(ctx: CanvasRenderingContext2D) {
+  ctx.fillStyle = 'rgba(5, 8, 22, 0.5)'
+  ctx.beginPath()
+  ctx.ellipse(game.ballX, BALL_Y + BALL_RADIUS, 13, 4, 0, 0, Math.PI * 2)
+  ctx.fill()
+
+  circle(ctx, BALL, game.ballX, BALL_Y, BALL_RADIUS)
+
+  // stripe across the middle so you can see it spin
+  ctx.save()
+  ctx.translate(game.ballX, BALL_Y)
+  ctx.rotate(game.ballSpin)
+  rect(ctx, MOON, -BALL_RADIUS, -2, BALL_RADIUS * 2, 4)
+  ctx.restore()
+}
+
+// the ghost's tiny "boo" drifting up and fading
+function drawBoo(ctx: CanvasRenderingContext2D) {
+  if (game.squeakTimer <= 0) {
+    return
+  }
+
+  const p = 1 - game.squeakTimer / 0.7
+  ctx.fillStyle = `rgba(201, 184, 247, ${1 - p})`
+  ctx.font = '600 13px "Segoe UI", system-ui, sans-serif'
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'middle'
+  ctx.fillText('boo.', game.ghostX + 14, game.ghostY - 22 - p * 22)
 }
 
 // little "E" key floating over the ghost's head
@@ -72,7 +130,7 @@ function drawPrompt(ctx: CanvasRenderingContext2D) {
   ctx.fillText('E', x, y + 1)
 }
 
-function drawGhost(ctx: CanvasRenderingContext2D, x: number, y: number, lean: number, size: number) {
+function drawGhost(ctx: CanvasRenderingContext2D, x: number, y: number, lean: number, size: number, squish: number) {
   const t = game.time
   const bob = Math.sin(t * 3) * 4 * size
   const look = lean * 10
@@ -80,7 +138,8 @@ function drawGhost(ctx: CanvasRenderingContext2D, x: number, y: number, lean: nu
   ctx.save()
   ctx.translate(x, y + bob)
   ctx.rotate(lean)
-  ctx.scale(size, size)
+  // puff up wide and short when squeaking
+  ctx.scale(size * (1 + squish * 0.2), size * (1 - squish * 0.15))
 
   circle(ctx, 'rgba(201, 184, 247, 0.12)', 0, 0, 28)
 
@@ -116,7 +175,7 @@ function drawGhost(ctx: CanvasRenderingContext2D, x: number, y: number, lean: nu
     ctx.fill()
     circle(ctx, MOON, eyeX + look + 1, -5, 1.2)
   }
-  circle(ctx, GHOST_EYE, look * 0.6, 6, 2)
+  circle(ctx, GHOST_EYE, look * 0.6, 6, 2 + squish * 2)
 
   ctx.restore()
 }
