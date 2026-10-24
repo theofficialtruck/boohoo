@@ -1,4 +1,17 @@
-import { game, WIDTH, HEIGHT, LAMP_X, LAMP_Y, BALL_Y, BALL_RADIUS, START_ENERGY, nearbyObject } from './game'
+import {
+  game,
+  WIDTH,
+  HEIGHT,
+  LAMP_X,
+  LAMP_Y,
+  BALL_Y,
+  BALL_RADIUS,
+  START_ENERGY,
+  COMBO_TIME,
+  HEAD_X,
+  HEAD_Y,
+  nearbyObject,
+} from './game'
 
 const FLOOR_Y = 390
 
@@ -43,16 +56,106 @@ export function draw(ctx: CanvasRenderingContext2D) {
     drawGhost(ctx, 130, 440, Math.sin(game.time) * 0.15, 2.4, 0)
   }
 
-  if (game.screen === 'playing') {
+  if (game.screen !== 'title') {
     drawToy(ctx)
     drawBall(ctx)
     // 0 to 1, peaks in the middle of the squeak
     const squish = game.squeakTimer > 0 ? Math.sin((game.squeakTimer / 0.7) * Math.PI) : 0
     drawGhost(ctx, game.ghostX, game.ghostY, game.ghostLean, 1, squish)
     drawBoo(ctx)
+  }
+
+  if (game.screen === 'playing') {
+    drawComboRing(ctx)
+    drawFinalPrompt(ctx)
     drawPrompt(ctx)
+    drawMessage(ctx)
     drawHud(ctx)
   }
+
+  if (game.screen === 'won' || game.screen === 'lost') {
+    drawEnd(ctx)
+  }
+}
+
+// shrinks away while there's still time to chain a combo
+function drawComboRing(ctx: CanvasRenderingContext2D) {
+  if (game.comboTimer <= 0) {
+    return
+  }
+
+  const left = game.comboTimer / COMBO_TIME
+  ctx.strokeStyle = `rgba(201, 184, 247, ${0.3 + left * 0.5})`
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.arc(game.ghostX, game.ghostY + Math.sin(game.time * 3) * 4, 18 + left * 24, 0, Math.PI * 2)
+  ctx.stroke()
+}
+
+// big pulsing BOO! over the sleeper once the meter is full
+function drawFinalPrompt(ctx: CanvasRenderingContext2D) {
+  if (game.scare < 100 || game.humanState !== 'sleeping') {
+    return
+  }
+
+  const pulse = 1 + Math.sin(game.time * 6) * 0.08
+  ctx.save()
+  ctx.translate(HEAD_X, HEAD_Y - 110)
+  ctx.scale(pulse, pulse)
+  ctx.font = '900 30px "Arial Rounded MT Bold", "Segoe UI Black", "Arial Black", sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.lineJoin = 'round'
+  ctx.lineWidth = 8
+  ctx.strokeStyle = INDIGO
+  ctx.strokeText('BOO!', 0, 0)
+  ctx.fillStyle = LAVENDER
+  ctx.fillText('BOO!', 0, 0)
+  ctx.restore()
+}
+
+function drawMessage(ctx: CanvasRenderingContext2D) {
+  if (game.messageTimer <= 0) {
+    return
+  }
+
+  // fade out over the last bit
+  const alpha = Math.min(1, game.messageTimer / 0.4)
+  ctx.fillStyle = `rgba(201, 184, 247, ${alpha})`
+  ctx.font = '700 22px "Segoe UI", system-ui, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(game.message, WIDTH / 2, 40)
+}
+
+// placeholder ending until the proper end screens are in
+function drawEnd(ctx: CanvasRenderingContext2D) {
+  ctx.fillStyle = 'rgba(8, 11, 30, 0.6)'
+  ctx.fillRect(0, 0, WIDTH, HEIGHT)
+
+  let title = 'Out of spooks'
+  let line = 'The sun is coming up.'
+  if (game.screen === 'won') {
+    title = 'BOO!'
+    line = 'You actually scared them'
+  } else if (game.loseReason === 'too soon') {
+    title = 'Too soon!'
+    line = 'They woke up and saw a tiny ghost'
+  }
+
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.font = '900 72px "Arial Rounded MT Bold", "Segoe UI Black", "Arial Black", sans-serif'
+  ctx.lineJoin = 'round'
+  ctx.lineWidth = 12
+  ctx.strokeStyle = INDIGO
+  ctx.strokeText(title, WIDTH / 2, 230)
+  ctx.fillStyle = LAVENDER
+  ctx.fillText(title, WIDTH / 2, 230)
+
+  ctx.fillStyle = MOON
+  ctx.font = '600 20px "Segoe UI", system-ui, sans-serif'
+  ctx.fillText(line, WIDTH / 2, 300)
 }
 
 function drawHud(ctx: CanvasRenderingContext2D) {
@@ -370,6 +473,13 @@ function drawBed(ctx: CanvasRenderingContext2D) {
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.fillText('!', 846, 238)
+  } else if (game.humanState === 'awake') {
+    // eyes wide open, not impressed
+    ctx.moveTo(829, 295)
+    ctx.lineTo(837, 295)
+    ctx.stroke()
+    circle(ctx, HAIR, 834, 284, 2.5)
+    circle(ctx, HAIR, 843, 283, 2.5)
   } else {
     // closed eyes and a snoring mouth
     ctx.arc(837, 283, 4, 0.2, Math.PI - 0.2)
