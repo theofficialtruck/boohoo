@@ -1,4 +1,4 @@
-import { game, keys, startGame, update } from './game'
+import { game, interact, keys, startGame, update } from './game'
 import { draw } from './draw'
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!
@@ -17,6 +17,11 @@ window.addEventListener('keydown', (e) => {
 
   if (e.key === 'Enter' && game.screen === 'title') {
     start()
+  }
+
+  // e.repeat is true while the key is held, so one press means one action
+  if (e.key.toLowerCase() === 'e' && !e.repeat && game.screen === 'playing') {
+    interact()
   }
 })
 

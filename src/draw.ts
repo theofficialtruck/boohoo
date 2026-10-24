@@ -1,4 +1,4 @@
-import { game, WIDTH, HEIGHT } from './game'
+import { game, WIDTH, HEIGHT, LAMP_X, LAMP_Y, nearbyObject } from './game'
 
 const FLOOR_Y = 390
 
@@ -17,6 +17,7 @@ const SKIN = '#b9b3d9'
 const HAIR = '#2a2350'
 const LAVENDER = '#c9b8f7'
 const GHOST_EYE = '#1b1640'
+const LAMP_LIGHT = '#ffd97a'
 
 function rect(ctx: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = color
@@ -43,7 +44,32 @@ export function draw(ctx: CanvasRenderingContext2D) {
 
   if (game.screen === 'playing') {
     drawGhost(ctx, game.ghostX, game.ghostY, game.ghostLean, 1)
+    drawPrompt(ctx)
   }
+}
+
+// little "E" key floating over the ghost's head
+function drawPrompt(ctx: CanvasRenderingContext2D) {
+  if (nearbyObject() === '') {
+    return
+  }
+
+  const x = game.ghostX
+  const y = game.ghostY - 46 + Math.sin(game.time * 3) * 4
+
+  ctx.fillStyle = NIGHT
+  ctx.strokeStyle = LAVENDER
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.roundRect(x - 13, y - 13, 26, 26, 6)
+  ctx.fill()
+  ctx.stroke()
+
+  ctx.fillStyle = LAVENDER
+  ctx.font = '700 16px "Segoe UI", system-ui, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText('E', x, y + 1)
 }
 
 function drawGhost(ctx: CanvasRenderingContext2D, x: number, y: number, lean: number, size: number) {
@@ -113,6 +139,7 @@ function drawRoom(ctx: CanvasRenderingContext2D) {
   drawRug(ctx)
   drawShelf(ctx)
   drawNightstand(ctx)
+  drawLamp(ctx)
 
   // moonlight from the window, slowly shimmering
   ctx.fillStyle = `rgba(214, 228, 255, ${0.07 + Math.sin(game.time * 1.3) * 0.02})`
@@ -179,11 +206,27 @@ function drawNightstand(ctx: CanvasRenderingContext2D) {
   rect(ctx, INDIGO_LIGHT, 444, 308, 102, 10)
   rect(ctx, SHADOW, 458, 334, 74, 3)
   circle(ctx, SLATE_LIGHT, 495, 352, 4)
+}
 
-  // lamp
+function drawLamp(ctx: CanvasRenderingContext2D) {
+  // blinks on and off unevenly while flickering
+  const lampOn = game.lampFlicker > 0 && Math.sin(game.lampFlicker * 30) > -0.2
+
+  if (lampOn) {
+    circle(ctx, 'rgba(255, 217, 122, 0.12)', LAMP_X, LAMP_Y + 20, 130)
+    ctx.fillStyle = 'rgba(255, 217, 122, 0.25)'
+    ctx.beginPath()
+    ctx.moveTo(470, 260)
+    ctx.lineTo(520, 260)
+    ctx.lineTo(546, 308)
+    ctx.lineTo(444, 308)
+    ctx.closePath()
+    ctx.fill()
+  }
+
   rect(ctx, SLATE, 480, 298, 30, 10)
   rect(ctx, SLATE, 493, 258, 4, 40)
-  ctx.fillStyle = SLATE_LIGHT
+  ctx.fillStyle = lampOn ? LAMP_LIGHT : SLATE_LIGHT
   ctx.beginPath()
   ctx.moveTo(468, 260)
   ctx.lineTo(522, 260)

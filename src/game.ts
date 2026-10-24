@@ -1,6 +1,11 @@
 export const WIDTH = 960
 export const HEIGHT = 540
 const GHOST_SPEED = 130
+const REACH = 60
+
+// middle of the lamp shade
+export const LAMP_X = 495
+export const LAMP_Y = 243
 
 export const game = {
   screen: 'title', // 'title' | 'playing'
@@ -8,6 +13,7 @@ export const game = {
   ghostX: 0,
   ghostY: 0,
   ghostLean: 0,
+  lampFlicker: 0, // seconds of flickering left
 }
 
 export const keys: Record<string, boolean> = {}
@@ -17,6 +23,26 @@ export function startGame() {
   game.ghostX = 120
   game.ghostY = 240
   game.ghostLean = 0
+  game.lampFlicker = 0
+}
+
+function distance(x1: number, y1: number, x2: number, y2: number) {
+  return Math.hypot(x2 - x1, y2 - y1)
+}
+
+export function nearbyObject() {
+  if (distance(game.ghostX, game.ghostY, LAMP_X, LAMP_Y) < REACH) {
+    return 'lamp'
+  }
+  return ''
+}
+
+export function interact() {
+  const thing = nearbyObject()
+
+  if (thing === 'lamp' && game.lampFlicker <= 0) {
+    game.lampFlicker = 1.2
+  }
 }
 
 export function update(dt: number) {
@@ -24,6 +50,10 @@ export function update(dt: number) {
 
   if (game.screen !== 'playing') {
     return
+  }
+
+  if (game.lampFlicker > 0) {
+    game.lampFlicker -= dt
   }
 
   let dx = 0
