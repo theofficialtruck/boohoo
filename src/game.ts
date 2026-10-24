@@ -2,6 +2,8 @@ export const WIDTH = 960
 export const HEIGHT = 540
 const GHOST_SPEED = 130
 const REACH = 60
+const STIR_TIME = 3
+export const START_ENERGY = 8
 
 // middle of the lamp shade
 export const LAMP_X = 495
@@ -33,6 +35,11 @@ export const game = {
   ballSpin: 0,
 
   squeakTimer: 0,
+
+  scare: 0, // 0 to 100
+  energy: START_ENERGY,
+  humanState: 'sleeping', // 'sleeping' | 'stirring'
+  stirTimer: 0,
 }
 
 export const keys: Record<string, boolean> = {}
@@ -57,6 +64,19 @@ export function startGame() {
   game.ballSpin = 0
 
   game.squeakTimer = 0
+
+  game.scare = 0
+  game.energy = START_ENERGY
+  game.humanState = 'sleeping'
+  game.stirTimer = 0
+}
+
+// every action that actually happens ends up here
+function scareAction() {
+  game.scare = Math.min(100, game.scare + 15)
+  game.energy -= 1
+  game.humanState = 'stirring'
+  game.stirTimer = STIR_TIME
 }
 
 function distance(x1: number, y1: number, x2: number, y2: number) {
@@ -77,10 +97,15 @@ export function nearbyObject() {
 }
 
 export function interact() {
+  if (game.energy <= 0) {
+    return
+  }
+
   const thing = nearbyObject()
 
   if (thing === 'lamp' && game.lampFlicker <= 0) {
     game.lampFlicker = 1.2
+    scareAction()
   }
 
   if (thing === 'toy') {
@@ -89,20 +114,28 @@ export function interact() {
       game.toyState = 'falling'
       game.toyVX = 45
       game.toyVY = -150
+      scareAction()
     } else if (game.toyState === 'floor' && game.toyWobble <= 0) {
       game.toyWobble = 0.8
+      scareAction()
     }
   }
 
   if (thing === 'ball' && game.ballSpeed === 0) {
     // push the ball away from the ghost
     game.ballSpeed = game.ghostX <= game.ballX ? 300 : -300
+    scareAction()
   }
 }
 
 export function squeak() {
+  if (game.energy <= 0) {
+    return
+  }
+
   if (game.squeakTimer <= 0) {
     game.squeakTimer = 0.7
+    scareAction()
   }
 }
 
@@ -121,6 +154,13 @@ export function update(dt: number) {
   }
   if (game.squeakTimer > 0) {
     game.squeakTimer -= dt
+  }
+
+  if (game.humanState === 'stirring') {
+    game.stirTimer -= dt
+    if (game.stirTimer <= 0) {
+      game.humanState = 'sleeping'
+    }
   }
 
   if (game.toyState === 'falling') {

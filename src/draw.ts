@@ -1,4 +1,4 @@
-import { game, WIDTH, HEIGHT, LAMP_X, LAMP_Y, BALL_Y, BALL_RADIUS, nearbyObject } from './game'
+import { game, WIDTH, HEIGHT, LAMP_X, LAMP_Y, BALL_Y, BALL_RADIUS, START_ENERGY, nearbyObject } from './game'
 
 const FLOOR_Y = 390
 
@@ -51,6 +51,34 @@ export function draw(ctx: CanvasRenderingContext2D) {
     drawGhost(ctx, game.ghostX, game.ghostY, game.ghostLean, 1, squish)
     drawBoo(ctx)
     drawPrompt(ctx)
+    drawHud(ctx)
+  }
+}
+
+function drawHud(ctx: CanvasRenderingContext2D) {
+  ctx.fillStyle = LAVENDER
+  ctx.font = '700 12px "Segoe UI", system-ui, sans-serif'
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'middle'
+  ctx.fillText('SCARE', 24, 27)
+
+  rect(ctx, SHADOW, 76, 21, 180, 12)
+  rect(ctx, LAVENDER, 76, 21, (180 * game.scare) / 100, 12)
+  ctx.strokeStyle = INDIGO_LIGHT
+  ctx.lineWidth = 2
+  ctx.strokeRect(76, 21, 180, 12)
+
+  // one little wisp per action left
+  for (let i = 0; i < START_ENERGY; i++) {
+    const x = 30 + i * 18
+    const y = 54
+    ctx.fillStyle = i < game.energy ? LAVENDER : INDIGO_LIGHT
+    ctx.beginPath()
+    ctx.moveTo(x, y - 9)
+    ctx.lineTo(x + 5, y + 1)
+    ctx.arc(x, y + 2, 5, 0, Math.PI)
+    ctx.closePath()
+    ctx.fill()
   }
 }
 
@@ -106,14 +134,23 @@ function drawBoo(ctx: CanvasRenderingContext2D) {
   ctx.fillText('boo.', game.ghostX + 14, game.ghostY - 22 - p * 22)
 }
 
-// little "E" key floating over the ghost's head
+// little "E" key floating over the ghost's head, or "wait..." while the human stirs
 function drawPrompt(ctx: CanvasRenderingContext2D) {
-  if (nearbyObject() === '') {
+  const x = game.ghostX
+  const y = game.ghostY - 46 + Math.sin(game.time * 3) * 4
+
+  if (game.humanState === 'stirring') {
+    ctx.fillStyle = LAVENDER
+    ctx.font = 'italic 600 14px "Segoe UI", system-ui, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('wait...', x, y)
     return
   }
 
-  const x = game.ghostX
-  const y = game.ghostY - 46 + Math.sin(game.time * 3) * 4
+  if (nearbyObject() === '') {
+    return
+  }
 
   ctx.fillStyle = NIGHT
   ctx.strokeStyle = LAVENDER
@@ -296,7 +333,10 @@ function drawLamp(ctx: CanvasRenderingContext2D) {
 }
 
 function drawBed(ctx: CanvasRenderingContext2D) {
-  const breath = Math.sin(game.time * 1.6) * 3
+  const stirring = game.humanState === 'stirring'
+  // slow breathing when asleep, restless tossing when stirring
+  const breath = stirring ? Math.sin(game.time * 14) * 3 : Math.sin(game.time * 1.6) * 3
+  const toss = stirring ? Math.sin(game.time * 7) * 4 : 0
 
   rect(ctx, INDIGO, 900, 190, 45, 205)
   rect(ctx, INDIGO_LIGHT, 900, 184, 45, 10)
@@ -312,15 +352,30 @@ function drawBed(ctx: CanvasRenderingContext2D) {
   ctx.roundRect(830, 280, 66, 26, 12)
   ctx.fill()
 
-  circle(ctx, HAIR, 858, 279, 21)
-  circle(ctx, SKIN, 846, 286, 19)
-  // closed eyes and a snoring mouth
+  circle(ctx, HAIR, 858 + toss, 279, 21)
+  circle(ctx, SKIN, 846 + toss, 286, 19)
   ctx.strokeStyle = HAIR
   ctx.lineWidth = 2
   ctx.beginPath()
-  ctx.arc(837, 283, 4, 0.2, Math.PI - 0.2)
-  ctx.stroke()
-  circle(ctx, HAIR, 832, 294, 2.5 + breath * 0.3)
+  if (stirring) {
+    // scrunched up eyes and a grumpy little mouth
+    ctx.moveTo(832 + toss, 285)
+    ctx.lineTo(841 + toss, 282)
+    ctx.moveTo(829 + toss, 295)
+    ctx.lineTo(836 + toss, 294)
+    ctx.stroke()
+
+    ctx.fillStyle = MOON
+    ctx.font = '900 26px "Segoe UI", system-ui, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('!', 846, 238)
+  } else {
+    // closed eyes and a snoring mouth
+    ctx.arc(837, 283, 4, 0.2, Math.PI - 0.2)
+    ctx.stroke()
+    circle(ctx, HAIR, 832, 294, 2.5 + breath * 0.3)
+  }
 
   ctx.fillStyle = BLANKET
   ctx.beginPath()
@@ -335,6 +390,10 @@ function drawBed(ctx: CanvasRenderingContext2D) {
 }
 
 function drawZs(ctx: CanvasRenderingContext2D) {
+  if (game.humanState !== 'sleeping') {
+    return
+  }
+
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   for (let i = 0; i < 3; i++) {
