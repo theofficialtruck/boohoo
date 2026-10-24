@@ -1,8 +1,6 @@
-import { game } from './game'
+import { game, WIDTH, HEIGHT } from './game'
 
-export const WIDTH = 960
-export const HEIGHT = 540
-export const FLOOR_Y = 390
+const FLOOR_Y = 390
 
 const NIGHT = '#151b3d'
 const FLOOR = '#0f1431'
@@ -18,6 +16,7 @@ const MOON = '#d6e4ff'
 const SKIN = '#b9b3d9'
 const HAIR = '#2a2350'
 const LAVENDER = '#c9b8f7'
+const GHOST_EYE = '#1b1640'
 
 function rect(ctx: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = color
@@ -39,7 +38,61 @@ export function draw(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = 'rgba(8, 11, 30, 0.4)'
     ctx.fillRect(0, 0, WIDTH, HEIGHT)
     drawTitle(ctx)
+    drawGhost(ctx, 130, 440, Math.sin(game.time) * 0.15, 2.4)
   }
+
+  if (game.screen === 'playing') {
+    drawGhost(ctx, game.ghostX, game.ghostY, game.ghostLean, 1)
+  }
+}
+
+function drawGhost(ctx: CanvasRenderingContext2D, x: number, y: number, lean: number, size: number) {
+  const t = game.time
+  const bob = Math.sin(t * 3) * 4 * size
+  const look = lean * 10
+
+  ctx.save()
+  ctx.translate(x, y + bob)
+  ctx.rotate(lean)
+  ctx.scale(size, size)
+
+  circle(ctx, 'rgba(201, 184, 247, 0.12)', 0, 0, 28)
+
+  // little curl on top
+  const curl = Math.sin(t * 6) * 2
+  ctx.strokeStyle = LAVENDER
+  ctx.lineWidth = 3
+  ctx.lineCap = 'round'
+  ctx.beginPath()
+  ctx.moveTo(0, -14)
+  ctx.quadraticCurveTo(-4 + curl, -24, 3 + curl, -25)
+  ctx.stroke()
+
+  // body, with three hem points that sway out of step
+  ctx.fillStyle = LAVENDER
+  ctx.beginPath()
+  ctx.moveTo(0, -16)
+  ctx.bezierCurveTo(10, -16, 13, -2, 14, 12)
+  ctx.lineTo(9 + Math.sin(t * 5) * 2, 21)
+  ctx.lineTo(4.5, 14)
+  ctx.lineTo(Math.sin(t * 5 + 1) * 2, 21)
+  ctx.lineTo(-4.5, 14)
+  ctx.lineTo(-9 + Math.sin(t * 5 + 2) * 2, 21)
+  ctx.lineTo(-14, 12)
+  ctx.bezierCurveTo(-13, -2, -10, -16, 0, -16)
+  ctx.fill()
+
+  // eyes look where it's going
+  for (const eyeX of [-5, 5]) {
+    ctx.fillStyle = GHOST_EYE
+    ctx.beginPath()
+    ctx.ellipse(eyeX + look, -3, 3, 4.5, 0, 0, Math.PI * 2)
+    ctx.fill()
+    circle(ctx, MOON, eyeX + look + 1, -5, 1.2)
+  }
+  circle(ctx, GHOST_EYE, look * 0.6, 6, 2)
+
+  ctx.restore()
 }
 
 function drawRoom(ctx: CanvasRenderingContext2D) {

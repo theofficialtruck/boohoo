@@ -1,4 +1,4 @@
-import { game, startGame, update } from './game'
+import { game, keys, startGame, update } from './game'
 import { draw } from './draw'
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!
@@ -13,8 +13,21 @@ function start() {
 startButton.addEventListener('click', start)
 
 window.addEventListener('keydown', (e) => {
+  keys[e.key.toLowerCase()] = true
+
   if (e.key === 'Enter' && game.screen === 'title') {
     start()
+  }
+})
+
+window.addEventListener('keyup', (e) => {
+  keys[e.key.toLowerCase()] = false
+})
+
+// otherwise a key held while switching windows stays stuck down
+window.addEventListener('blur', () => {
+  for (const key in keys) {
+    keys[key] = false
   }
 })
 
