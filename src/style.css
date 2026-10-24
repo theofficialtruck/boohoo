@@ -1,0 +1,54 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #0a0e24;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+/* keep 16:9 and fit inside the window */
+#game {
+  position: relative;
+  width: min(100vw, calc(100vh * 16 / 9));
+  aspect-ratio: 16 / 9;
+}
+
+#screen {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#start {
+  position: absolute;
+  left: 50%;
+  top: 68%;
+  transform: translate(-50%, -50%);
+  padding: 0.55em 2.4em;
+  border: none;
+  border-radius: 999px;
+  background: #c9b8f7;
+  color: #151b3d;
+  font-family: inherit;
+  font-size: clamp(16px, 2.2vw, 26px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  box-shadow: 0 0 28px rgba(201, 184, 247, 0.45);
+  cursor: pointer;
+}
+
+#start:hover {
+  background: #ddd2ff;
+  box-shadow: 0 0 40px rgba(201, 184, 247, 0.7);
+}
+
+#start[hidden] {
+  display: none;
+}
