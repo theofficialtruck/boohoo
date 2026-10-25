@@ -1,5 +1,8 @@
+// same as the pictures, every file in src/sounds gets packed into the build
+const soundFiles = import.meta.glob('./sounds/*', { eager: true, import: 'default' }) as Record<string, string>
+
 function play(file: string, volume = 0.6) {
-  const sound = new Audio('sounds/' + file)
+  const sound = new Audio(soundFiles['./sounds/' + file])
   sound.volume = volume
   sound.play().catch(() => {})
 }

@@ -36,9 +36,12 @@ const DANGER = '#d95b5f'
 const DAWN = '#f2b48f'
 
 // furniture is from the Glitch CC0 pack, the objects on the shelf are Kenney puzzle tiles
+// vite packs every file in src/images into the build so the game stays one html file
+const imageFiles = import.meta.glob('./images/*', { eager: true, import: 'default' }) as Record<string, string>
+
 function loadImage(file: string) {
   const img = new Image()
-  img.src = 'images/' + file
+  img.src = imageFiles['./images/' + file]
   return img
 }
 
