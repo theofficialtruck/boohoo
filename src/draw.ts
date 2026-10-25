@@ -32,6 +32,7 @@ const HAIR = '#2a2350'
 const LAVENDER = '#c9b8f7'
 const GHOST_EYE = '#1b1640'
 const LAMP_LIGHT = '#ffd97a'
+const DANGER = '#d95b5f'
 const DAWN = '#f2b48f'
 
 // furniture is from the Glitch CC0 pack, the objects on the shelf are Kenney puzzle tiles
@@ -205,7 +206,7 @@ function drawMessage(ctx: CanvasRenderingContext2D) {
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   // to the right of the wisps so they don't overlap
-  ctx.fillText(game.message, 650, 40)
+  ctx.fillText(game.message, 700, 40)
 }
 
 function drawEnd(ctx: CanvasRenderingContext2D) {
@@ -267,7 +268,8 @@ function drawHud(ctx: CanvasRenderingContext2D) {
   ctx.fillStyle = LAVENDER
   ctx.fillText('DETECT', 24, 49)
   rect(ctx, SHADOW, 76, 43, 180, 12)
-  rect(ctx, MOON, 76, 43, (180 * Math.min(game.detection, 100)) / 100, 12)
+  const detectColor = game.detection >= SAFE_DETECTION ? DANGER : MOON
+  rect(ctx, detectColor, 76, 43, (180 * Math.min(game.detection, 100)) / 100, 12)
   ctx.strokeRect(76, 43, 180, 12)
   rect(ctx, LAVENDER, 76 + (180 * SAFE_DETECTION) / 100, 39, 2, 20)
 
@@ -283,6 +285,9 @@ function drawHud(ctx: CanvasRenderingContext2D) {
     ctx.closePath()
     ctx.fill()
   }
+
+  ctx.fillStyle = LAVENDER
+  ctx.fillText('SCARES LEFT', 422, 38)
 }
 
 function drawToy(ctx: CanvasRenderingContext2D) {
