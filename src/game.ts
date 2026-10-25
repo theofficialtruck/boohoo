@@ -20,7 +20,7 @@ export const BALL_Y = 458
 export const BALL_RADIUS = 12
 
 export const game = {
-  screen: 'title', // 'title' | 'playing' | 'won' | 'lost'
+  screen: 'title', // 'title' | 'instructions' | 'playing' | 'won' | 'lost'
   loseReason: '', // 'too soon' | 'no energy'
   time: 0,
   ghostX: 0,

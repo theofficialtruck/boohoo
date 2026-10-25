@@ -3,20 +3,41 @@ import { draw } from './draw'
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!
 const ctx = canvas.getContext('2d')!
-const startButton = document.querySelector<HTMLButtonElement>('#start')!
+const menuButton = document.querySelector<HTMLButtonElement>('#start')!
 
-function start() {
-  startGame()
-  startButton.hidden = true
+// the one button does whatever the current screen needs
+function pressMenu() {
+  if (game.screen === 'title') {
+    game.screen = 'instructions'
+  } else if (game.screen === 'instructions' || game.screen === 'won' || game.screen === 'lost') {
+    startGame()
+  }
 }
 
-startButton.addEventListener('click', start)
+// show the button with the right label, or hide it while playing
+function updateMenuButton() {
+  let label = ''
+  if (game.screen === 'title') label = 'Start'
+  if (game.screen === 'instructions') label = 'Play'
+  if (game.screen === 'won' || game.screen === 'lost') label = 'Try again'
+
+  menuButton.hidden = label === ''
+  if (menuButton.textContent !== label) {
+    menuButton.textContent = label
+  }
+}
+
+menuButton.addEventListener('click', () => {
+  pressMenu()
+  // otherwise Enter would "click" it again next time
+  menuButton.blur()
+})
 
 window.addEventListener('keydown', (e) => {
   keys[e.key.toLowerCase()] = true
 
-  if (e.key === 'Enter' && game.screen === 'title') {
-    start()
+  if (e.key === 'Enter' && !e.repeat && game.screen !== 'playing') {
+    pressMenu()
   }
 
   // e.repeat is true while the key is held, so one press means one action
@@ -49,6 +70,7 @@ function loop(now: number) {
 
   update(dt)
   draw(ctx)
+  updateMenuButton()
   requestAnimationFrame(loop)
 }
 

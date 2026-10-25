@@ -56,7 +56,11 @@ export function draw(ctx: CanvasRenderingContext2D) {
     drawGhost(ctx, 130, 440, Math.sin(game.time) * 0.15, 2.4, 0)
   }
 
-  if (game.screen !== 'title') {
+  if (game.screen === 'instructions') {
+    drawInstructions(ctx)
+  }
+
+  if (game.screen === 'playing' || game.screen === 'won' || game.screen === 'lost') {
     drawToy(ctx)
     drawBall(ctx)
     // 0 to 1, peaks in the middle of the squeak
@@ -75,6 +79,41 @@ export function draw(ctx: CanvasRenderingContext2D) {
 
   if (game.screen === 'won' || game.screen === 'lost') {
     drawEnd(ctx)
+  }
+}
+
+function drawInstructions(ctx: CanvasRenderingContext2D) {
+  ctx.fillStyle = 'rgba(8, 11, 30, 0.7)'
+  ctx.fillRect(0, 0, WIDTH, HEIGHT)
+
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.font = '900 44px "Arial Rounded MT Bold", "Segoe UI Black", "Arial Black", sans-serif'
+  ctx.lineJoin = 'round'
+  ctx.lineWidth = 10
+  ctx.strokeStyle = INDIGO
+  ctx.strokeText('How to haunt', WIDTH / 2, 85)
+  ctx.fillStyle = LAVENDER
+  ctx.fillText('How to haunt', WIDTH / 2, 85)
+
+  const rows = [
+    ['Arrows / WASD', 'float around'],
+    ['E', 'move whatever is nearby'],
+    ['Q', 'tiny "boo"'],
+    ['BOO', 'must E at the bed when this comes up'],
+  ]
+
+  // keys on the left, what they do on the right
+  for (let i = 0; i < rows.length; i++) {
+    const y = 140 + i * 34
+    ctx.font = '700 18px "Segoe UI", system-ui, sans-serif'
+    ctx.textAlign = 'right'
+    ctx.fillStyle = LAVENDER
+    ctx.fillText(rows[i][0], 370, y)
+    ctx.font = '400 18px "Segoe UI", system-ui, sans-serif'
+    ctx.textAlign = 'left'
+    ctx.fillStyle = MOON
+    ctx.fillText(rows[i][1], 392, y)
   }
 }
 
@@ -137,7 +176,7 @@ function drawEnd(ctx: CanvasRenderingContext2D) {
   let line = 'The sun is coming up.'
   if (game.screen === 'won') {
     title = 'BOO!'
-    line = 'You actually scared them'
+    line = 'You scared them!'
   } else if (game.loseReason === 'too soon') {
     title = 'Too soon!'
     line = 'They woke up and saw a tiny ghost'
