@@ -1,11 +1,20 @@
 export const WIDTH = 960
 export const HEIGHT = 540
 const GHOST_SPEED = 130
+const SPRINT_SPEED = 260
 const REACH = 60
-const STIR_TIME = 3
 export const COMBO_TIME = 4
+
+// detection goes from 0 to 100, and at 100 they wake up
+const ACTION_NOISE = 85
+const SPRINT_NOISE = 20 // per second, so about 5 seconds of sprinting from empty
+const NOISE_FADE = 25 // per second
+// below this line another action won't push it to 100
+export const SAFE_DETECTION = 100 - ACTION_NOISE
 export const START_ENERGY = 8
 const MESSAGE_TIME = 1.6
+// how long an ending plays before you can try again
+export const END_DELAY = 1.5
 
 // the sleeper's face
 export const HEAD_X = 846
@@ -22,6 +31,7 @@ export const BALL_RADIUS = 12
 export const game = {
   screen: 'title', // 'title' | 'instructions' | 'playing' | 'won' | 'lost'
   loseReason: '', // 'too soon' | 'no energy'
+  endTimer: 0, // seconds since the round ended
   time: 0,
   ghostX: 0,
   ghostY: 0,
@@ -45,8 +55,8 @@ export const game = {
 
   scare: 0, // 0 to 100
   energy: START_ENERGY,
-  humanState: 'sleeping', // 'sleeping' | 'stirring' | 'awake'
-  stirTimer: 0,
+  humanState: 'sleeping', // 'sleeping' | 'stirring' | 'awake' | 'scared'
+  detection: 0,
   comboTimer: 0, // seconds left to chain a combo after they settle
   lastAction: '',
 
@@ -59,6 +69,7 @@ export const keys: Record<string, boolean> = {}
 export function startGame() {
   game.screen = 'playing'
   game.loseReason = ''
+  game.endTimer = 0
   game.ghostX = 120
   game.ghostY = 240
   game.ghostLean = 0
@@ -81,7 +92,7 @@ export function startGame() {
   game.scare = 0
   game.energy = START_ENERGY
   game.humanState = 'sleeping'
-  game.stirTimer = 0
+  game.detection = 0
   game.comboTimer = 0
   game.lastAction = ''
 
@@ -102,7 +113,8 @@ function wakeUpTooSoon() {
 
 // every action that actually happens ends up here
 function scareAction(name: string) {
-  if (game.humanState === 'stirring') {
+  game.detection += ACTION_NOISE
+  if (game.detection >= 100) {
     wakeUpTooSoon()
     return
   }
@@ -123,7 +135,6 @@ function scareAction(name: string) {
   game.energy -= 1
   game.lastAction = name
   game.humanState = 'stirring'
-  game.stirTimer = STIR_TIME
   game.comboTimer = 0
 }
 
@@ -156,6 +167,7 @@ export function interact() {
     if (game.humanState === 'stirring') {
       wakeUpTooSoon()
     } else {
+      game.humanState = 'scared'
       game.screen = 'won'
     }
     return
@@ -204,10 +216,15 @@ export function squeak() {
 export function update(dt: number) {
   game.time += dt
 
-  if (game.screen !== 'playing') {
+  if (game.screen === 'title' || game.screen === 'instructions') {
     return
   }
 
+  if (game.screen === 'won' || game.screen === 'lost') {
+    game.endTimer += dt
+  }
+
+  // objects keep animating after the round ends so nothing freezes mid air
   if (game.lampFlicker > 0) {
     game.lampFlicker -= dt
   }
@@ -222,20 +239,6 @@ export function update(dt: number) {
   }
   if (game.comboTimer > 0) {
     game.comboTimer -= dt
-  }
-
-  if (game.humanState === 'stirring') {
-    game.stirTimer -= dt
-    if (game.stirTimer <= 0) {
-      game.humanState = 'sleeping'
-      game.comboTimer = COMBO_TIME
-
-      // out of actions and the meter isn't full, so the night is over
-      if (game.energy <= 0 && game.scare < 100) {
-        game.screen = 'lost'
-        game.loseReason = 'no energy'
-      }
-    }
   }
 
   if (game.toyState === 'falling') {
@@ -272,6 +275,11 @@ export function update(dt: number) {
     }
   }
 
+  // the rest only happens while the round is still going
+  if (game.screen !== 'playing') {
+    return
+  }
+
   let dx = 0
   let dy = 0
   if (keys['arrowleft'] || keys['a']) dx -= 1
@@ -285,8 +293,10 @@ export function update(dt: number) {
     dy *= 0.7
   }
 
-  game.ghostX += dx * GHOST_SPEED * dt
-  game.ghostY += dy * GHOST_SPEED * dt
+  const sprinting = keys['shift'] && (dx !== 0 || dy !== 0)
+  const speed = sprinting ? SPRINT_SPEED : GHOST_SPEED
+  game.ghostX += dx * speed * dt
+  game.ghostY += dy * speed * dt
 
   // keep the ghost in the room
   game.ghostX = Math.max(16, Math.min(WIDTH - 16, game.ghostX))
@@ -294,4 +304,26 @@ export function update(dt: number) {
 
   // lean into the movement, then ease back upright
   game.ghostLean += (dx * 0.25 - game.ghostLean) * Math.min(dt * 8, 1)
+
+  // sprinting is noisy, otherwise the noise slowly fades
+  if (sprinting) {
+    game.detection += SPRINT_NOISE * dt
+  } else {
+    game.detection = Math.max(0, game.detection - NOISE_FADE * dt)
+  }
+
+  if (game.detection >= 100) {
+    wakeUpTooSoon()
+  } else if (game.humanState === 'sleeping' && game.detection >= SAFE_DETECTION) {
+    game.humanState = 'stirring'
+  } else if (game.humanState === 'stirring' && game.detection < SAFE_DETECTION) {
+    game.humanState = 'sleeping'
+    game.comboTimer = COMBO_TIME
+
+    // out of actions and the meter isn't full, so the night is over
+    if (game.energy <= 0 && game.scare < 100) {
+      game.screen = 'lost'
+      game.loseReason = 'no energy'
+    }
+  }
 }

@@ -10,6 +10,8 @@ import {
   COMBO_TIME,
   HEAD_X,
   HEAD_Y,
+  END_DELAY,
+  SAFE_DETECTION,
   nearbyObject,
 } from './game'
 
@@ -32,6 +34,8 @@ const LAVENDER = '#c9b8f7'
 const GHOST_EYE = '#1b1640'
 const LAMP_LIGHT = '#ffd97a'
 const BALL = '#7d8ad8'
+const DAWN = '#f2b48f'
+const SUN = '#ffd9a8'
 
 function rect(ctx: CanvasRenderingContext2D, color: string, x: number, y: number, w: number, h: number) {
   ctx.fillStyle = color
@@ -64,8 +68,19 @@ export function draw(ctx: CanvasRenderingContext2D) {
     drawToy(ctx)
     drawBall(ctx)
     // 0 to 1, peaks in the middle of the squeak
-    const squish = game.squeakTimer > 0 ? Math.sin((game.squeakTimer / 0.7) * Math.PI) : 0
+    let squish = game.squeakTimer > 0 ? Math.sin((game.squeakTimer / 0.7) * Math.PI) : 0
+    // one huge puff for the final BOO
+    if (game.screen === 'won' && game.endTimer < 0.6) {
+      squish = Math.sin((game.endTimer / 0.6) * Math.PI) * 2
+    }
+
+    ctx.save()
+    // ghosts don't do daylight
+    if (game.loseReason === 'no energy') {
+      ctx.globalAlpha = Math.max(0, 1 - game.endTimer / END_DELAY)
+    }
     drawGhost(ctx, game.ghostX, game.ghostY, game.ghostLean, 1, squish)
+    ctx.restore()
     drawBoo(ctx)
   }
 
@@ -100,6 +115,7 @@ function drawInstructions(ctx: CanvasRenderingContext2D) {
     ['Arrows / WASD', 'float around'],
     ['E', 'move whatever is nearby'],
     ['Q', 'tiny "boo"'],
+    ['Shift', 'sprint, but it fills the detection bar'],
     ['BOO', 'must E at the bed when this comes up'],
   ]
 
@@ -167,9 +183,22 @@ function drawMessage(ctx: CanvasRenderingContext2D) {
   ctx.fillText(game.message, WIDTH / 2, 40)
 }
 
-// placeholder ending until the proper end screens are in
 function drawEnd(ctx: CanvasRenderingContext2D) {
-  ctx.fillStyle = 'rgba(8, 11, 30, 0.6)'
+  // warm the whole room up as the sun rises
+  if (game.loseReason === 'no energy') {
+    ctx.fillStyle = `rgba(242, 180, 143, ${Math.min(game.endTimer / END_DELAY, 1) * 0.12})`
+    ctx.fillRect(0, 0, WIDTH, HEIGHT)
+  }
+
+  // let the reaction play, then fade the words in
+  const fade = Math.min(Math.max((game.endTimer - (END_DELAY - 0.5)) / 0.5, 0), 1)
+  if (fade <= 0) {
+    return
+  }
+
+  ctx.save()
+  ctx.globalAlpha = fade
+  ctx.fillStyle = 'rgba(8, 11, 30, 0.5)'
   ctx.fillRect(0, 0, WIDTH, HEIGHT)
 
   let title = 'Out of spooks'
@@ -195,6 +224,7 @@ function drawEnd(ctx: CanvasRenderingContext2D) {
   ctx.fillStyle = MOON
   ctx.font = '600 20px "Segoe UI", system-ui, sans-serif'
   ctx.fillText(line, WIDTH / 2, 300)
+  ctx.restore()
 }
 
 function drawHud(ctx: CanvasRenderingContext2D) {
@@ -210,10 +240,18 @@ function drawHud(ctx: CanvasRenderingContext2D) {
   ctx.lineWidth = 2
   ctx.strokeRect(76, 21, 180, 12)
 
+  ctx.fillStyle = LAVENDER
+  ctx.fillText('DETECT', 24, 49)
+  rect(ctx, SHADOW, 76, 43, 180, 12)
+  rect(ctx, MOON, 76, 43, (180 * Math.min(game.detection, 100)) / 100, 12)
+  ctx.strokeRect(76, 43, 180, 12)
+  // mark where it's safe to do something again
+  rect(ctx, LAVENDER, 76 + (180 * SAFE_DETECTION) / 100, 39, 2, 20)
+
   // one little wisp per action left
   for (let i = 0; i < START_ENERGY; i++) {
-    const x = 30 + i * 18
-    const y = 54
+    const x = 280 + i * 18
+    const y = 37
     ctx.fillStyle = i < game.energy ? LAVENDER : INDIGO_LIGHT
     ctx.beginPath()
     ctx.moveTo(x, y - 9)
@@ -276,19 +314,10 @@ function drawBoo(ctx: CanvasRenderingContext2D) {
   ctx.fillText('boo.', game.ghostX + 14, game.ghostY - 22 - p * 22)
 }
 
-// little "E" key floating over the ghost's head, or "wait..." while the human stirs
+// little "E" key floating over the ghost's head
 function drawPrompt(ctx: CanvasRenderingContext2D) {
   const x = game.ghostX
   const y = game.ghostY - 46 + Math.sin(game.time * 3) * 4
-
-  if (game.humanState === 'stirring') {
-    ctx.fillStyle = LAVENDER
-    ctx.font = 'italic 600 14px "Segoe UI", system-ui, sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText('wait...', x, y)
-    return
-  }
 
   if (nearbyObject() === '') {
     return
@@ -403,6 +432,20 @@ function drawWindow(ctx: CanvasRenderingContext2D) {
   circle(ctx, MOON, 340, 115, 22)
   circle(ctx, SKY, 351, 107, 19)
 
+  // out of time: the sky warms up and the sun peeks over the sill
+  if (game.loseReason === 'no energy') {
+    const dawn = Math.min(game.endTimer / END_DELAY, 1)
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(250, 70, 130, 175)
+    ctx.clip()
+    ctx.globalAlpha = dawn * 0.9
+    rect(ctx, DAWN, 250, 70, 130, 175)
+    ctx.globalAlpha = 1
+    circle(ctx, SUN, 315, 270 - dawn * 70, 30)
+    ctx.restore()
+  }
+
   rect(ctx, SLATE, 312, 70, 6, 175)
   rect(ctx, SLATE, 250, 155, 130, 6)
   rect(ctx, SLATE_LIGHT, 230, 250, 170, 10)
@@ -475,10 +518,21 @@ function drawLamp(ctx: CanvasRenderingContext2D) {
 }
 
 function drawBed(ctx: CanvasRenderingContext2D) {
-  const stirring = game.humanState === 'stirring'
+  const state = game.humanState
+  const stirring = state === 'stirring'
   // slow breathing when asleep, restless tossing when stirring
   const breath = stirring ? Math.sin(game.time * 14) * 3 : Math.sin(game.time * 1.6) * 3
   const toss = stirring ? Math.sin(game.time * 7) * 4 : 0
+
+  // how far they've sat up at the end
+  let lift = 0
+  if (state === 'awake') lift = Math.min(game.endTimer * 120, 28)
+  if (state === 'scared') lift = Math.min(game.endTimer * 500, 60)
+  const shake = state === 'scared' ? Math.sin(game.time * 60) * 2 : 0
+
+  // middle of the face
+  const hx = HEAD_X + toss + shake
+  const hy = HEAD_Y - lift
 
   rect(ctx, INDIGO, 900, 190, 45, 205)
   rect(ctx, INDIGO_LIGHT, 900, 184, 45, 10)
@@ -494,36 +548,56 @@ function drawBed(ctx: CanvasRenderingContext2D) {
   ctx.roundRect(830, 280, 66, 26, 12)
   ctx.fill()
 
-  circle(ctx, HAIR, 858 + toss, 279, 21)
-  circle(ctx, SKIN, 846 + toss, 286, 19)
+  // pajama top shows once they sit up
+  if (lift > 0) {
+    rect(ctx, SLATE, hx - 18, hy + 12, 36, lift + 10)
+  }
+
+  circle(ctx, HAIR, hx + 12, hy - 7, 21)
+  circle(ctx, SKIN, hx, hy, 19)
+
   ctx.strokeStyle = HAIR
   ctx.lineWidth = 2
+  ctx.fillStyle = MOON
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
   ctx.beginPath()
+
   if (stirring) {
     // scrunched up eyes and a grumpy little mouth
-    ctx.moveTo(832 + toss, 285)
-    ctx.lineTo(841 + toss, 282)
-    ctx.moveTo(829 + toss, 295)
-    ctx.lineTo(836 + toss, 294)
+    ctx.moveTo(hx - 14, hy - 1)
+    ctx.lineTo(hx - 5, hy - 4)
+    ctx.moveTo(hx - 17, hy + 9)
+    ctx.lineTo(hx - 10, hy + 8)
     ctx.stroke()
-
+    ctx.font = '900 26px "Segoe UI", system-ui, sans-serif'
+    ctx.fillText('!', HEAD_X, HEAD_Y - 48)
+  } else if (state === 'awake') {
+    // woke up, saw a tiny ghost, and laughed
+    ctx.arc(hx - 12, hy + 4, 5, 0.2, Math.PI - 0.2)
+    ctx.stroke()
+    circle(ctx, HAIR, hx - 12, hy - 2, 2.5)
+    circle(ctx, HAIR, hx - 3, hy - 3, 2.5)
+    if (game.endTimer > 0.3) {
+      ctx.fillStyle = MOON
+      ctx.font = 'italic 600 18px "Segoe UI", system-ui, sans-serif'
+      ctx.fillText('pfft', hx - 10, hy - 42)
+    }
+  } else if (state === 'scared') {
+    // huge eyes, huge mouth
+    circle(ctx, MOON, hx - 12, hy - 3, 5)
+    circle(ctx, MOON, hx - 1, hy - 4, 5)
+    circle(ctx, HAIR, hx - 12, hy - 3, 1.6)
+    circle(ctx, HAIR, hx - 1, hy - 4, 1.6)
+    circle(ctx, HAIR, hx - 9, hy + 9, 6)
     ctx.fillStyle = MOON
     ctx.font = '900 26px "Segoe UI", system-ui, sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText('!', 846, 238)
-  } else if (game.humanState === 'awake') {
-    // eyes wide open, not impressed
-    ctx.moveTo(829, 295)
-    ctx.lineTo(837, 295)
-    ctx.stroke()
-    circle(ctx, HAIR, 834, 284, 2.5)
-    circle(ctx, HAIR, 843, 283, 2.5)
+    ctx.fillText('!!', hx, hy - 46)
   } else {
     // closed eyes and a snoring mouth
-    ctx.arc(837, 283, 4, 0.2, Math.PI - 0.2)
+    ctx.arc(hx - 9, hy - 3, 4, 0.2, Math.PI - 0.2)
     ctx.stroke()
-    circle(ctx, HAIR, 832, 294, 2.5 + breath * 0.3)
+    circle(ctx, HAIR, hx - 14, hy + 8, 2.5 + breath * 0.3)
   }
 
   ctx.fillStyle = BLANKET

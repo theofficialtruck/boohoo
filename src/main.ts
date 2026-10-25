@@ -1,4 +1,4 @@
-import { game, interact, keys, squeak, startGame, update } from './game'
+import { game, interact, keys, squeak, startGame, update, END_DELAY } from './game'
 import { draw } from './draw'
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!
@@ -9,9 +9,16 @@ const menuButton = document.querySelector<HTMLButtonElement>('#start')!
 function pressMenu() {
   if (game.screen === 'title') {
     game.screen = 'instructions'
-  } else if (game.screen === 'instructions' || game.screen === 'won' || game.screen === 'lost') {
+  } else if (game.screen === 'instructions') {
+    startGame()
+  } else if (endingDone()) {
     startGame()
   }
+}
+
+// let the ending play out before offering another go
+function endingDone() {
+  return (game.screen === 'won' || game.screen === 'lost') && game.endTimer > END_DELAY
 }
 
 // show the button with the right label, or hide it while playing
@@ -19,7 +26,7 @@ function updateMenuButton() {
   let label = ''
   if (game.screen === 'title') label = 'Start'
   if (game.screen === 'instructions') label = 'Play'
-  if (game.screen === 'won' || game.screen === 'lost') label = 'Try again'
+  if (endingDone()) label = 'Try again'
 
   menuButton.hidden = label === ''
   if (menuButton.textContent !== label) {
