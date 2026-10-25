@@ -1,3 +1,5 @@
+import {playCombo, playLamp, playRattle, playRoll, playScream, playSqueak, playSunrise, playThud, playWake,} from './sound'
+
 export const WIDTH = 960
 export const HEIGHT = 540
 const GHOST_SPEED = 130
@@ -17,12 +19,12 @@ const MESSAGE_TIME = 1.6
 export const END_DELAY = 1.5
 
 // the sleeper's face
-export const HEAD_X = 846
+export const HEAD_X = 852
 export const HEAD_Y = 286
 
 // middle of the lamp shade
 export const LAMP_X = 495
-export const LAMP_Y = 243
+export const LAMP_Y = 264
 
 const TOY_FLOOR_Y = 425
 export const BALL_Y = 458
@@ -76,8 +78,8 @@ export function startGame() {
   game.lampFlicker = 0
 
   game.toyState = 'shelf'
-  game.toyX = 110
-  game.toyY = 104
+  game.toyX = 118
+  game.toyY = 157
   game.toyVX = 0
   game.toyVY = 0
   game.toyAngle = 0
@@ -106,6 +108,7 @@ function showMessage(text: string) {
 }
 
 function wakeUpTooSoon() {
+  playWake()
   game.humanState = 'awake'
   game.screen = 'lost'
   game.loseReason = 'too soon'
@@ -126,9 +129,11 @@ function scareAction(name: string) {
   } else if (game.comboTimer > 0 && game.lastAction === 'lamp' && name === 'ball') {
     points += 15
     showMessage('Spooky combo!')
+    playCombo()
   } else if (game.comboTimer > 0 && game.lastAction === 'toy' && name === 'squeak') {
     points += 15
     showMessage('Spooky combo!')
+    playCombo()
   }
 
   game.scare = Math.min(100, game.scare + points)
@@ -167,6 +172,7 @@ export function interact() {
     if (game.humanState === 'stirring') {
       wakeUpTooSoon()
     } else {
+      playScream()
       game.humanState = 'scared'
       game.screen = 'won'
     }
@@ -179,6 +185,7 @@ export function interact() {
 
   if (thing === 'lamp' && game.lampFlicker <= 0) {
     game.lampFlicker = 1.2
+    playLamp()
     scareAction('lamp')
   }
 
@@ -191,6 +198,7 @@ export function interact() {
       scareAction('toy')
     } else if (game.toyState === 'floor' && game.toyWobble <= 0) {
       game.toyWobble = 0.8
+      playRattle()
       scareAction('toy')
     }
   }
@@ -198,6 +206,7 @@ export function interact() {
   if (thing === 'ball' && game.ballSpeed === 0) {
     // push the ball away from the ghost
     game.ballSpeed = game.ghostX <= game.ballX ? 300 : -300
+    playRoll()
     scareAction('ball')
   }
 }
@@ -209,6 +218,7 @@ export function squeak() {
 
   if (game.squeakTimer <= 0) {
     game.squeakTimer = 0.7
+    playSqueak()
     scareAction('squeak')
   }
 }
@@ -252,6 +262,7 @@ export function update(dt: number) {
       game.toyAngle = Math.PI / 2
       game.toyState = 'floor'
       game.toyWobble = 0.5
+      playThud()
     }
   }
 
@@ -324,6 +335,7 @@ export function update(dt: number) {
     if (game.energy <= 0 && game.scare < 100) {
       game.screen = 'lost'
       game.loseReason = 'no energy'
+      playSunrise()
     }
   }
 }
