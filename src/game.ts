@@ -32,17 +32,19 @@ export const BALL_RADIUS = 12
 // repeat is the many points you get for doing the same thing twice in a row
 // sunrise is how many seconds until the sun comes up, 0 means no clock
 // creaky turns on the creaky floorboards
+// burnt mean the lamp bulb doesn't work for that night
+// restless means the human is tossing and turning every so often
 export const NIGHTS = [
-  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 0, creaky: false },
-  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 100, creaky: false },
-  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 85, creaky: false },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 85, creaky: false },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 80, creaky: true },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 80, creaky: true },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 75, creaky: true },
-  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 6, sunrise: 70, creaky: true },
-  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 65, creaky: true },
-  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 60, creaky: true },
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 0, creaky: false, burnt: false, restless: false },
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 100, creaky: false, burnt: false, restless: false },
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 85, creaky: false, burnt: false, restless: false },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 85, creaky: false, burnt: false, restless: false },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 80, creaky: true, burnt: false, restless: false },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 80, creaky: true, burnt: true, restless: false },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 75, creaky: true, burnt: true, restless: true },
+  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 6, sunrise: 70, creaky: true, burnt: true, restless: true },
+  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 65, creaky: true, burnt: true, restless: true },
+  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 60, creaky: true , burnt: true, restless: true },
 ]
 
 export const BOARDS = [
@@ -52,6 +54,8 @@ export const BOARDS = [
 ]
 // how much detection level will go up when you are on a creaky board
 const CREAK_NOISE = 40
+// how much detection level will go up when the human is tossing around
+const TOSS_NOISE = 45
 
 export const game = {
   screen: 'title', // 'title' | 'instructions' | 'playing' | 'won' | 'lost'
@@ -86,6 +90,7 @@ export const game = {
   detection: 0,
   comboTimer: 0, // seconds left to chain a combo after they settle
   lastAction: '',
+  tossTimer: 0, // seconds left until the human tosses again
 
   message: '',
   messageTimer: 0,
@@ -136,6 +141,7 @@ export function startGame() {
   game.detection = 0
   game.comboTimer = 0
   game.lastAction = ''
+  game.tossTimer = 10 + Math.random() *4
 
   game.message = ''
   game.messageTimer = 0
@@ -226,6 +232,11 @@ export function interact() {
   }
 
   if (game.energy <= 0) {
+    return
+  }
+
+  if (thing === 'lamp' && currentNight().burnt) {
+    showMessage('The bulb has burned out!')
     return
   }
 
@@ -397,6 +408,15 @@ export function update(dt: number) {
         game.detection += CREAK_NOISE * dt
         showMessage('Creak!')
       }
+    }
+  }
+
+  if (currentNight().restless) {
+    game.tossTimer -= dt
+    if (game.tossTimer <= 0) {
+      game.tossTimer = 10 + Math.random()*4
+      game.detection = Math.min(99, game.detection + TOSS_NOISE)
+      showMessage('Human\'s tossing around...')
     }
   }
 
