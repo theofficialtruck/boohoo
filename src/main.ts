@@ -1,4 +1,4 @@
-import { game, interact, keys, squeak, startGame, nextNight, update, END_DELAY, NIGHTS } from './game'
+import { game, interact, keys, squeak, startGame, nextNight, update, END_DELAY, NIGHTS, skipNight } from './game'
 import { draw } from './draw'
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!
@@ -60,6 +60,18 @@ window.addEventListener('keydown', (e) => {
 
   if (e.key.toLowerCase() === 'q' && !e.repeat && game.screen === 'playing') {
     squeak()
+  }
+
+  if (e.key === '`' && !e.repeat) {
+    game.devMenu = !game.devMenu
+  }
+
+  if (game.devMenu && e.key === '1' && !e.repeat) {
+    skipNight()
+  }
+
+  if (game.devMenu && e.key === '2' && !e.repeat) {
+    game.noLimits = !game.noLimits
   }
 })
 

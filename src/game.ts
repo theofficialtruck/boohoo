@@ -89,6 +89,10 @@ export const game = {
 
   message: '',
   messageTimer: 0,
+
+  // dev menu stays on between nights
+  devMenu: false,
+  noLimits: false,
 }
 
 export function currentNight() {
@@ -265,6 +269,16 @@ export function squeak() {
   }
 }
 
+export function skipNight() {
+  if (game.screen !== 'playing') {
+    return
+  }
+  game.scare = 100
+  game.detection = 0
+  game.humanState = 'sleeping'
+  showMessage('Go BOO them!')
+}
+
 export function update(dt: number) {
   game.time += dt
 
@@ -384,6 +398,12 @@ export function update(dt: number) {
         showMessage('Creak!')
       }
     }
+  }
+
+  if (game.noLimits) {
+    game.detection = 0
+    game.energy = currentNight().energy
+    game.timeLeft = currentNight().sunrise
   }
 
   if (game.detection >= 100) {

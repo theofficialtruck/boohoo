@@ -105,6 +105,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
     drawPrompt(ctx)
     drawMessage(ctx)
     drawHud(ctx)
+    drawDevMenu(ctx)
   }
 
   if (game.screen === 'won' || game.screen === 'lost') {
@@ -291,6 +292,19 @@ function drawHud(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = game.timeLeft < 10 ? DANGER : LAVENDER
     ctx.fillText('SUNRISE IN ' + Math.ceil(game.timeLeft), 936, 49)
   }
+}
+
+function drawDevMenu(ctx: CanvasRenderingContext2D) {
+  if (!game.devMenu) {
+    return
+  }
+
+  rect(ctx, 'rgba(8, 11, 30, 0.8)', 330, 66, 300, 28)
+  ctx.fillStyle = LAVENDER
+  ctx.font = '700 14px "Segoe UI", system-ui, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText('1  skip night      2  no limits: ' + (game.noLimits ? 'ON' : 'OFF'), 480, 80)
 }
 
 function drawToy(ctx: CanvasRenderingContext2D) {
