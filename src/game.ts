@@ -30,23 +30,25 @@ export const BALL_RADIUS = 12
 // energy is how many scares you get, fade is how fast detection level decreases every second
 // combo is the seconds needed to chain a combo, sprint is how fast the detection level increases from sprinting
 // repeat is the many points you get for doing the same thing twice in a row
+// sunrise is how many seconds until the sun comes up, 0 means no clock
 export const NIGHTS = [
-  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6 },
-  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6 },
-  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6 },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6 },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6 },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6 },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6 },
-  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 6 },
-  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0 },
-  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0 },
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 0 },
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 100 },
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 85 },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 85 },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 80 },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 80 },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 75 },
+  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 6, sunrise: 70 },
+  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 65 },
+  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 60 },
 ]
 
 export const game = {
   screen: 'title', // 'title' | 'instructions' | 'playing' | 'won' | 'lost'
   night: 1, // 1 to 10
-  loseReason: '', // 'too soon' | 'no energy'
+  timeLeft: 0, // seconds until sunrise
+  loseReason: '', // 'too soon' | 'no energy' | 'out of time'
   endTimer: 0, // seconds since the round ended
   time: 0,
   ghostX: 0,
@@ -111,6 +113,7 @@ export function startGame() {
 
   game.scare = 0
   game.energy = currentNight().energy
+  game.timeLeft = currentNight().sunrise
   game.humanState = 'sleeping'
   game.detection = 0
   game.comboTimer = 0
@@ -314,6 +317,18 @@ export function update(dt: number) {
   // the rest only happens while the round is still going
   if (game.screen !== 'playing') {
     return
+  }
+
+  if (currentNight().sunrise > 0) {
+    game.timeLeft -= dt
+    if (game.timeLeft <= 0) {
+      game.timeLeft = 0
+      game.humanState = 'sleeping'
+      game.screen = 'lost'
+      game.loseReason = 'out of time'
+      playSunrise()
+      return
+    }
   }
 
   let dx = 0

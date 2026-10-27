@@ -105,7 +105,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
     }
 
     ctx.save()
-    if (game.loseReason === 'no energy') {
+    if (sunIsUp()) {
       ctx.globalAlpha = Math.max(0, 1 - game.endTimer / END_DELAY)
     }
     drawGhost(ctx, game.ghostX, game.ghostY, game.ghostLean, 1, squish)
@@ -211,8 +211,12 @@ function drawMessage(ctx: CanvasRenderingContext2D) {
   ctx.fillText(game.message, 700, 40)
 }
 
+function sunIsUp() {
+  return game.loseReason === 'no energy' || game.loseReason === 'out of time'
+}
+
 function drawEnd(ctx: CanvasRenderingContext2D) {
-  if (game.loseReason === 'no energy') {
+  if (sunIsUp()) {
     ctx.fillStyle = `rgba(242, 180, 143, ${Math.min(game.endTimer / END_DELAY, 1) * 0.12})`
     ctx.fillRect(0, 0, WIDTH, HEIGHT)
   }
@@ -233,6 +237,9 @@ function drawEnd(ctx: CanvasRenderingContext2D) {
   if (game.screen === 'won') {
     title = 'BOO!'
     line = 'Night ' + game.night + ' done!'
+  } else if (game.loseReason === 'out of time') {
+    title = 'Out of time'
+    line = 'The sun came up before the BOO'
   } else if (game.loseReason === 'too soon') {
     title = 'Too soon!'
     line = 'They woke up and saw a tiny ghost'
@@ -293,6 +300,11 @@ function drawHud(ctx: CanvasRenderingContext2D) {
 
   ctx.textAlign = 'right'
   ctx.fillText('NIGHT ' + game.night, 936, 27)
+
+  if (currentNight().sunrise > 0) {
+    ctx.fillStyle = game.timeLeft < 10 ? DANGER : LAVENDER
+    ctx.fillText('SUNRISE IN ' + Math.ceil(game.timeLeft), 936, 49)
+  }
 }
 
 function drawToy(ctx: CanvasRenderingContext2D) {
@@ -458,7 +470,7 @@ function drawWindow(ctx: CanvasRenderingContext2D) {
   ctx.drawImage(moonImg, 325, 91, 42, 43)
 
   // out of time: the sky warms up and the sun peeks over the sill
-  if (game.loseReason === 'no energy') {
+  if (sunIsUp()) {
     const dawn = Math.min(game.endTimer / END_DELAY, 1)
     ctx.globalAlpha = dawn * 0.9
     rect(ctx, DAWN, 250, 70, 130, 170)
