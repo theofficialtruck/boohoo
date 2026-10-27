@@ -1,18 +1,4 @@
-import {
-  game,
-  WIDTH,
-  HEIGHT,
-  LAMP_X,
-  LAMP_Y,
-  BALL_Y,
-  BALL_RADIUS,
-  currentNight,
-  HEAD_X,
-  HEAD_Y,
-  END_DELAY,
-  SAFE_DETECTION,
-  nearbyObject,
-} from './game'
+import { game, WIDTH, HEIGHT, LAMP_X, LAMP_Y, BALL_Y, BALL_RADIUS, currentNight, HEAD_X, HEAD_Y, END_DELAY, SAFE_DETECTION, nearbyObject, BOARDS, ghostOnBoard, } from './game'
 
 const FLOOR_Y = 390
 
@@ -444,6 +430,7 @@ function drawRoom(ctx: CanvasRenderingContext2D) {
 
   drawWindow(ctx)
   drawRug(ctx)
+  drawBoards(ctx)
   drawShelf(ctx)
   drawNightstand(ctx)
   drawLamp(ctx)
@@ -482,6 +469,21 @@ function drawWindow(ctx: CanvasRenderingContext2D) {
 
 function drawRug(ctx: CanvasRenderingContext2D) {
   drawDark(ctx, rugImg, 165, 418, 330, 93)
+}
+
+// creaky boards are a little lighter so you can spot them, and light up when you're on one
+function drawBoards(ctx: CanvasRenderingContext2D) {
+  if (!currentNight().creaky) {
+    return
+  }
+
+  for (const board of BOARDS) {
+    const [x, y, w, h] = board
+    rect(ctx, ghostOnBoard(board) ? SLATE : SHADOW, x, y, w, h)
+    // two nails coming loose
+    rect(ctx, SLATE_LIGHT, x+6, y+h/2-2, 4, 4)
+    rect(ctx, SLATE_LIGHT, x+w-10, y+h/2-2, 4, 4)
+  }
 }
 
 // x, y, size and color of each object, just placed by eye

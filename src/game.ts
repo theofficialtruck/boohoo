@@ -31,18 +31,27 @@ export const BALL_RADIUS = 12
 // combo is the seconds needed to chain a combo, sprint is how fast the detection level increases from sprinting
 // repeat is the many points you get for doing the same thing twice in a row
 // sunrise is how many seconds until the sun comes up, 0 means no clock
+// creaky turns on the creaky floorboards
 export const NIGHTS = [
-  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 0 },
-  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 100 },
-  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 85 },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 85 },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 80 },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 80 },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 75 },
-  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 6, sunrise: 70 },
-  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 65 },
-  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 60 },
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 0, creaky: false },
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 100, creaky: false },
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 85, creaky: false },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 85, creaky: false },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 80, creaky: true },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 80, creaky: true },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 75, creaky: true },
+  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 6, sunrise: 70, creaky: true },
+  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 65, creaky: true },
+  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 60, creaky: true },
 ]
+
+export const BOARDS = [
+  [450, 392, 90, 31], // in front of nightstand
+  [505, 467, 90, 41], // in middle of floor next to rug
+  [660, 427, 90, 36], // just before the bed
+]
+// how much detection level will go up when you are on a creaky board
+const CREAK_NOISE = 40
 
 export const game = {
   screen: 'title', // 'title' | 'instructions' | 'playing' | 'won' | 'lost'
@@ -84,6 +93,11 @@ export const game = {
 
 export function currentNight() {
   return NIGHTS[game.night - 1]
+}
+
+export function ghostOnBoard(board: number[]) {
+  const [x, y, w, h] = board
+  return game.ghostX > x && game.ghostX < x + w && game.ghostY > y && game.ghostY < y + h
 }
 
 export const keys: Record<string, boolean> = {}
@@ -361,6 +375,15 @@ export function update(dt: number) {
     game.detection += currentNight().sprint * dt
   } else {
     game.detection = Math.max(0, game.detection - currentNight().fade * dt)
+  }
+
+  if (currentNight().creaky) {
+    for (const board of BOARDS) {
+      if (ghostOnBoard(board)) {
+        game.detection += CREAK_NOISE * dt
+        showMessage('Creak!')
+      }
+    }
   }
 
   if (game.detection >= 100) {
