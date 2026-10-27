@@ -5,15 +5,11 @@ export const HEIGHT = 540
 const GHOST_SPEED = 130
 const SPRINT_SPEED = 260
 const REACH = 60
-export const COMBO_TIME = 4
 
 // detection goes from 0 to 100, and at 100 they wake up
 const ACTION_NOISE = 85
-const SPRINT_NOISE = 20 // per second, so about 5 seconds of sprinting from empty
-const NOISE_FADE = 25 // per second
 // below this line another action won't push it to 100
 export const SAFE_DETECTION = 100 - ACTION_NOISE
-export const START_ENERGY = 8
 const MESSAGE_TIME = 1.6
 // how long an ending plays before you can try again
 export const END_DELAY = 1.5
@@ -30,8 +26,26 @@ const TOY_FLOOR_Y = 425
 export const BALL_Y = 458
 export const BALL_RADIUS = 12
 
+// each night is a little bit harder than the one before. 
+// energy is how many scares you get, fade is how fast detection level decreases every second
+// combo is the seconds needed to chain a combo, sprint is how fast the detection level increases from sprinting
+// repeat is the many points you get for doing the same thing twice in a row
+export const NIGHTS = [
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6 },
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6 },
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6 },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6 },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6 },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6 },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6 },
+  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 6 },
+  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0 },
+  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0 },
+]
+
 export const game = {
   screen: 'title', // 'title' | 'instructions' | 'playing' | 'won' | 'lost'
+  night: 1, // 1 to 10
   loseReason: '', // 'too soon' | 'no energy'
   endTimer: 0, // seconds since the round ended
   time: 0,
@@ -56,7 +70,7 @@ export const game = {
   squeakTimer: 0,
 
   scare: 0, // 0 to 100
-  energy: START_ENERGY,
+  energy: 0,
   humanState: 'sleeping', // 'sleeping' | 'stirring' | 'awake' | 'scared'
   detection: 0,
   comboTimer: 0, // seconds left to chain a combo after they settle
@@ -64,6 +78,10 @@ export const game = {
 
   message: '',
   messageTimer: 0,
+}
+
+export function currentNight() {
+  return NIGHTS[game.night - 1]
 }
 
 export const keys: Record<string, boolean> = {}
@@ -92,7 +110,7 @@ export function startGame() {
   game.squeakTimer = 0
 
   game.scare = 0
-  game.energy = START_ENERGY
+  game.energy = currentNight().energy
   game.humanState = 'sleeping'
   game.detection = 0
   game.comboTimer = 0
@@ -100,6 +118,13 @@ export function startGame() {
 
   game.message = ''
   game.messageTimer = 0
+}
+
+export function nextNight() {
+  if (game.night < NIGHTS.length) {
+    game.night += 1
+  }
+  startGame()
 }
 
 function showMessage(text: string) {
@@ -124,7 +149,7 @@ function scareAction(name: string) {
 
   let points = 13
   if (name === game.lastAction) {
-    points = 6
+    points = currentNight().repeat
     showMessage("They're getting used to that...")
   } else if (game.comboTimer > 0 && game.lastAction === 'lamp' && name === 'ball') {
     points += 15
@@ -318,9 +343,9 @@ export function update(dt: number) {
 
   // sprinting is noisy, otherwise the noise slowly fades
   if (sprinting) {
-    game.detection += SPRINT_NOISE * dt
+    game.detection += currentNight().sprint * dt
   } else {
-    game.detection = Math.max(0, game.detection - NOISE_FADE * dt)
+    game.detection = Math.max(0, game.detection - currentNight().fade * dt)
   }
 
   if (game.detection >= 100) {
@@ -329,7 +354,7 @@ export function update(dt: number) {
     game.humanState = 'stirring'
   } else if (game.humanState === 'stirring' && game.detection < SAFE_DETECTION) {
     game.humanState = 'sleeping'
-    game.comboTimer = COMBO_TIME
+    game.comboTimer = currentNight().combo
 
     // out of actions and the meter isn't full, so the night is over
     if (game.energy <= 0 && game.scare < 100) {

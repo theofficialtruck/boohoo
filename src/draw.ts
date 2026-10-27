@@ -6,8 +6,7 @@ import {
   LAMP_Y,
   BALL_Y,
   BALL_RADIUS,
-  START_ENERGY,
-  COMBO_TIME,
+  currentNight,
   HEAD_X,
   HEAD_Y,
   END_DELAY,
@@ -168,7 +167,7 @@ function drawComboRing(ctx: CanvasRenderingContext2D) {
     return
   }
 
-  const left = game.comboTimer / COMBO_TIME
+  const left = game.comboTimer / currentNight().combo
   ctx.strokeStyle = `rgba(201, 184, 247, ${0.3 + left * 0.5})`
   ctx.lineWidth = 2
   ctx.beginPath()
@@ -233,7 +232,7 @@ function drawEnd(ctx: CanvasRenderingContext2D) {
   let line = 'The sun is coming up.'
   if (game.screen === 'won') {
     title = 'BOO!'
-    line = 'You scared them!'
+    line = 'Night ' + game.night + ' done!'
   } else if (game.loseReason === 'too soon') {
     title = 'Too soon!'
     line = 'They woke up and saw a tiny ghost'
@@ -277,7 +276,7 @@ function drawHud(ctx: CanvasRenderingContext2D) {
   rect(ctx, LAVENDER, 76 + (180 * SAFE_DETECTION) / 100, 39, 2, 20)
 
   // one little wisp per action left
-  for (let i = 0; i < START_ENERGY; i++) {
+  for (let i = 0; i < currentNight().energy; i++) {
     const x = 280 + i * 18
     const y = 37
     ctx.fillStyle = i < game.energy ? LAVENDER : INDIGO_LIGHT
@@ -291,6 +290,9 @@ function drawHud(ctx: CanvasRenderingContext2D) {
 
   ctx.fillStyle = LAVENDER
   ctx.fillText('SCARES LEFT', 422, 38)
+
+  ctx.textAlign = 'right'
+  ctx.fillText('NIGHT ' + game.night, 936, 27)
 }
 
 function drawToy(ctx: CanvasRenderingContext2D) {

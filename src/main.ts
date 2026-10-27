@@ -1,4 +1,4 @@
-import { game, interact, keys, squeak, startGame, update, END_DELAY } from './game'
+import { game, interact, keys, squeak, startGame, nextNight, update, END_DELAY, NIGHTS } from './game'
 import { draw } from './draw'
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!
@@ -11,6 +11,8 @@ function pressMenu() {
     game.screen = 'instructions'
   } else if (game.screen === 'instructions') {
     startGame()
+  } else if (endingDone() && game.screen === 'won') {
+    nextNight()
   } else if (endingDone()) {
     startGame()
   }
@@ -27,6 +29,10 @@ function updateMenuButton() {
   if (game.screen === 'title') label = 'Start'
   if (game.screen === 'instructions') label = 'Play'
   if (endingDone()) label = 'Try again'
+  
+  if (endingDone() && game.screen === 'won') {
+    label = game.night < NIGHTS.length ? 'Next night' : 'Play again'
+  }
 
   menuButton.hidden = label === ''
   if (menuButton.textContent !== label) {
