@@ -26,7 +26,7 @@ body {
   height: 100%;
 }
 
-#start {
+#start, #restart {
   position: absolute;
   left: 50%;
   top: 68%;
@@ -44,11 +44,15 @@ body {
   cursor: pointer;
 }
 
-#start:hover {
+#start:hover, #restart:hover {
   background: #ddd2ff;
   box-shadow: 0 0 40px rgba(201, 184, 247, 0.7);
 }
 
-#start[hidden] {
+#start[hidden], #restart[hidden] {
   display: none;
+}
+
+#restart {
+  top: 82%;
 }

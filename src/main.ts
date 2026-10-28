@@ -4,6 +4,7 @@ import { draw } from './draw'
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!
 const ctx = canvas.getContext('2d')!
 const menuButton = document.querySelector<HTMLButtonElement>('#start')!
+const restartButton = document.querySelector<HTMLButtonElement>('#restart')!
 
 // the one button does whatever the current screen needs
 function pressMenu() {
@@ -31,19 +32,28 @@ function updateMenuButton() {
   if (endingDone()) label = 'Try again'
   
   if (endingDone() && game.screen === 'won') {
-    label = game.night < NIGHTS.length ? 'Next night' : 'Play again'
+    label = game.night < NIGHTS.length ? 'Next night' : 'Replay night 10'
   }
 
   menuButton.hidden = label === ''
   if (menuButton.textContent !== label) {
     menuButton.textContent = label
   }
+
+  // after last night there is second button to restart
+  restartButton.hidden = !(endingDone() && game.screen === 'won' && game.night === NIGHTS.length)
 }
 
 menuButton.addEventListener('click', () => {
   pressMenu()
   // otherwise Enter would "click" it again next time
   menuButton.blur()
+})
+
+restartButton.addEventListener('click', () => {
+  game.night = 1
+  startGame()
+  restartButton.blur()
 })
 
 window.addEventListener('keydown', (e) => {
@@ -72,6 +82,14 @@ window.addEventListener('keydown', (e) => {
 
   if (game.devMenu && e.key === '2' && !e.repeat) {
     game.noLimits = !game.noLimits
+  }
+
+  if (game.devMenu && e.key === '3' && !e.repeat) {
+    const night = Number(prompt('Go to which night? (1-10)'))
+    if (night >= 1 && night <= NIGHTS.length) {
+      game.night = Math.floor(night)
+      startGame()
+    }
   }
 })
 

@@ -1,4 +1,4 @@
-import { game, WIDTH, HEIGHT, LAMP_X, LAMP_Y, BALL_Y, BALL_RADIUS, currentNight, HEAD_X, HEAD_Y, END_DELAY, SAFE_DETECTION, nearbyObject, BOARDS, ghostOnBoard, } from './game'
+import { game, WIDTH, HEIGHT, LAMP_X, LAMP_Y, BALL_Y, BALL_RADIUS, currentNight, HEAD_X, HEAD_Y, END_DELAY, SAFE_DETECTION, nearbyObject, BOARDS, ghostOnBoard, NIGHTS, } from './game'
 
 const FLOOR_Y = 390
 
@@ -224,6 +224,11 @@ function drawEnd(ctx: CanvasRenderingContext2D) {
   if (game.screen === 'won') {
     title = 'BOO!'
     line = 'Night ' + game.night + ' done!'
+
+    if (game.night === NIGHTS.length) {
+      title = 'You beat the game!'
+      line = 'Ten nights & one ghost'
+    }
   } else if (game.loseReason === 'out of time') {
     title = 'Out of time'
     line = 'The sun came up before the BOO'
@@ -299,12 +304,12 @@ function drawDevMenu(ctx: CanvasRenderingContext2D) {
     return
   }
 
-  rect(ctx, 'rgba(8, 11, 30, 0.8)', 330, 66, 300, 28)
+  rect(ctx, 'rgba(8, 11, 30, 0.8)', 300, 66, 360, 28)
   ctx.fillStyle = LAVENDER
   ctx.font = '700 14px "Segoe UI", system-ui, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText('1  skip night      2  no limits: ' + (game.noLimits ? 'ON' : 'OFF'), 480, 80)
+  ctx.fillText('1  skip night      2  no limits: ' + (game.noLimits ? 'ON' : 'OFF') + '      3  go to night', 480, 80)
 }
 
 function drawToy(ctx: CanvasRenderingContext2D) {

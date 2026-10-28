@@ -1,4 +1,5 @@
 import {playCombo, playLamp, playRattle, playRoll, playScream, playSqueak, playSunrise, playThud, playWake,} from './sound'
+import { confetti } from '@tsparticles/confetti'
 
 export const WIDTH = 960
 export const HEIGHT = 540
@@ -227,6 +228,10 @@ export function interact() {
       playScream()
       game.humanState = 'scared'
       game.screen = 'won'
+      
+      if (game.night === NIGHTS.length) {
+        confetti({ count: 150, spread: 90, position: { x: 50, y: 60 }, colors: ['#c9b8f7', '#ffd97a', '#d95b5f', '#d6e4ff', '#f2b48f']})
+      }
     }
     return
   }
