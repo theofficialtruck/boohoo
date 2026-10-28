@@ -37,15 +37,15 @@ export const BALL_RADIUS = 12
 // restless means the human is tossing and turning every so often
 export const NIGHTS = [
   { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 0, creaky: false, burnt: false, restless: false },
-  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 100, creaky: false, burnt: false, restless: false },
-  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 85, creaky: false, burnt: false, restless: false },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 85, creaky: false, burnt: false, restless: false },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 80, creaky: true, burnt: false, restless: false },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 80, creaky: true, burnt: true, restless: false },
-  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 75, creaky: true, burnt: true, restless: true },
-  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 6, sunrise: 70, creaky: true, burnt: true, restless: true },
-  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 65, creaky: true, burnt: true, restless: true },
-  { energy: 6, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 60, creaky: true , burnt: true, restless: true },
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 80, creaky: false, burnt: false, restless: false },
+  { energy: 8, fade: 25, combo: 4, sprint: 20, repeat: 6, sunrise: 75, creaky: false, burnt: false, restless: false },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 70, creaky: false, burnt: false, restless: false },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 65, creaky: true, burnt: false, restless: false },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 65, creaky: true, burnt: true, restless: false },
+  { energy: 7, fade: 18, combo: 4, sprint: 20, repeat: 6, sunrise: 65, creaky: true, burnt: true, restless: true },
+  { energy: 7, fade: 18, combo: 2.5, sprint: 30, repeat: 6, sunrise: 60, creaky: true, burnt: true, restless: true },
+  { energy: 7, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 55, creaky: true, burnt: true, restless: true },
+  { energy: 7, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 50, creaky: true , burnt: true, restless: true },
 ]
 
 export const BOARDS = [
