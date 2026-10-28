@@ -11,6 +11,16 @@
       <canvas id="screen" width="960" height="540"></canvas>
       <button id="start">Start</button>
       <button id="restart" hidden>Back to night 1</button>
+
+      <div id = "pauseMenu" hidden>
+        <h2>Paused</h2>
+        <button id="continue">Continue</button>
+        <button id="retry">Retry this night</button>
+        <button id="restartAll">Restart from night 1</button>
+        <p>Go back to a night you beat</p>
+        <div id="nightList"></div>
+      </div>
+      <button id="pause" title="Pause (esc)" hidden><img src="/src/images/pause-button.png" alt="Pause"/></button>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

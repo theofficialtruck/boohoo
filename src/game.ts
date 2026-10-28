@@ -100,6 +100,8 @@ export const game = {
   // dev menu stays on between nights
   devMenu: false,
   noLimits: false,
+
+  paused: false, // will be true if the pause menu is activated
 }
 
 export function currentNight() {
@@ -322,6 +324,10 @@ export function skipNight() {
 }
 
 export function update(dt: number) {
+  if (game.paused) {
+    return
+  }
+
   game.time += dt
 
   if (game.screen === 'title' || game.screen === 'instructions') {

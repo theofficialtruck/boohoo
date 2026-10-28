@@ -5,6 +5,9 @@ const canvas = document.querySelector<HTMLCanvasElement>('#screen')!
 const ctx = canvas.getContext('2d')!
 const menuButton = document.querySelector<HTMLButtonElement>('#start')!
 const restartButton = document.querySelector<HTMLButtonElement>('#restart')!
+const pauseButton = document.querySelector<HTMLButtonElement>('#pause')!
+const pauseMenu = document.querySelector<HTMLDivElement>('#pauseMenu')!
+const nightList = document.querySelector<HTMLDivElement>('#nightList')!
 
 // the one button does whatever the current screen needs
 function pressMenu() {
@@ -45,6 +48,8 @@ function updateMenuButton() {
   if (restartButton.textContent !== restartLabel) {
     restartButton.textContent = restartLabel
   }
+
+  pauseButton.hidden = game.screen !== 'playing'
 }
 
 menuButton.addEventListener('click', () => {
@@ -61,6 +66,52 @@ restartButton.addEventListener('click', () => {
   restartButton.blur()
 })
 
+function openPause() {
+  game.paused = true
+  pauseMenu.hidden = false
+
+  nightList.innerHTML = ''
+  if (game.best === 0) {
+    nightList.textContent = 'none yet'
+  }
+  for (let night = 1; night <= game.best; night++) {
+    const button = document.createElement('button')
+    button.textContent = String(night)
+    button.addEventListener('click', () => {
+      playNight(night)
+    })
+    nightList.appendChild(button)
+  }
+}
+
+function closePause() {
+  game.paused = false
+  pauseMenu.hidden = true
+}
+
+function togglePause() {
+  if (game.paused) {
+    closePause()
+  } else {
+    openPause()
+  }
+}
+
+function playNight(night: number) {
+  closePause()
+  game.night = night
+  startGame()
+}
+
+pauseButton.addEventListener('click', () => {
+  togglePause()
+  pauseButton.blur()
+})
+
+document.querySelector('#continue')!.addEventListener('click', closePause)
+document.querySelector('#retry')!.addEventListener('click', () => playNight(game.night))
+document.querySelector('#restartAll')!.addEventListener('click', () => playNight(1))
+
 window.addEventListener('keydown', (e) => {
   keys[e.key.toLowerCase()] = true
 
@@ -68,12 +119,16 @@ window.addEventListener('keydown', (e) => {
     pressMenu()
   }
 
+  if (e.key === 'Escape' && !e.repeat && game.screen === 'playing') {
+    togglePause()
+  }
+
   // e.repeat is true while the key is held, so one press means one action
-  if (e.key.toLowerCase() === 'e' && !e.repeat && game.screen === 'playing') {
+  if (e.key.toLowerCase() === 'e' && !e.repeat && game.screen === 'playing' && !game.paused) {
     interact()
   }
 
-  if (e.key.toLowerCase() === 'q' && !e.repeat && game.screen === 'playing') {
+  if (e.key.toLowerCase() === 'q' && !e.repeat && game.screen === 'playing' && !game.paused) {
     squeak()
   }
 

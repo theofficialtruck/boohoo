@@ -291,11 +291,11 @@ function drawHud(ctx: CanvasRenderingContext2D) {
   ctx.fillText('SCARES LEFT', 422, 38)
 
   ctx.textAlign = 'right'
-  ctx.fillText('NIGHT ' + game.night, 936, 27)
+  ctx.fillText('NIGHT ' + game.night, 890, 27)
 
   if (currentNight().sunrise > 0) {
     ctx.fillStyle = game.timeLeft < 10 ? DANGER : LAVENDER
-    ctx.fillText('SUNRISE IN ' + Math.ceil(game.timeLeft), 936, 49)
+    ctx.fillText('SUNRISE IN ' + Math.ceil(game.timeLeft), 890, 49)
   }
 }
 
