@@ -40,8 +40,11 @@ function updateMenuButton() {
     menuButton.textContent = label
   }
 
-  // after last night there is second button to restart
-  restartButton.hidden = !(endingDone() && game.screen === 'won' && game.night === NIGHTS.length)
+  restartButton.hidden = !(endingDone() && game.screen === 'won')
+  const restartLabel = game.night < NIGHTS.length ? 'Try again' : 'Back to night 1'
+  if (restartButton.textContent !== restartLabel) {
+    restartButton.textContent = restartLabel
+  }
 }
 
 menuButton.addEventListener('click', () => {
@@ -51,7 +54,9 @@ menuButton.addEventListener('click', () => {
 })
 
 restartButton.addEventListener('click', () => {
-  game.night = 1
+  if (game.night === NIGHTS.length) {
+    game.night = 1
+  }
   startGame()
   restartButton.blur()
 })
