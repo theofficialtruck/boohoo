@@ -1,4 +1,4 @@
-import { game, interact, keys, squeak, startGame, nextNight, update, END_DELAY, NIGHTS, skipNight } from './game'
+import { game, interact, keys, squeak, startGame, nextNight, update, END_DELAY, NIGHTS, skipNight, loadProgress } from './game'
 import { draw } from './draw'
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!
@@ -28,7 +28,7 @@ function endingDone() {
 function updateMenuButton() {
   let label = ''
   if (game.screen === 'title') label = 'Start'
-  if (game.screen === 'instructions') label = 'Play'
+  if (game.screen === 'instructions') label = game.night > 1 ? 'Play night ' + game.night : 'Play'
   if (endingDone()) label = 'Try again'
   
   if (endingDone() && game.screen === 'won') {
@@ -109,6 +109,7 @@ window.addEventListener('blur', () => {
   }
 })
 
+loadProgress()
 let lastTime = performance.now()
 
 function loop(now: number) {

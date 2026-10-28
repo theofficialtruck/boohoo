@@ -61,6 +61,7 @@ const TOSS_NOISE = 45
 export const game = {
   screen: 'title', // 'title' | 'instructions' | 'playing' | 'won' | 'lost'
   night: 1, // 1 to 10
+  best: 0, // highest night that was beaten, saved to browser storage
   timeLeft: 0, // seconds until sunrise
   loseReason: '', // 'too soon' | 'no energy' | 'out of time'
   endTimer: 0, // seconds since the round ended
@@ -146,6 +147,7 @@ export function startGame() {
 
   game.message = ''
   game.messageTimer = 0
+  saveProgress()
 }
 
 export function nextNight() {
@@ -153,6 +155,25 @@ export function nextNight() {
     game.night += 1
   }
   startGame()
+}
+
+// localStorage will keep things even after a refresh
+function saveProgress() {
+  try {
+    localStorage.setItem('boohoo-night', String(game.night))
+    localStorage.setItem('boohoo-best', String(game.best))
+  } catch {
+    // if the browser blocks local storage, game will still work
+  }
+}
+
+export function loadProgress() {
+  try {
+    game.night = Number(localStorage.getItem('boohoo-night')) || 1
+    game.best = Number(localStorage.getItem('boohoo-best')) || 0
+  } catch {
+    // if the browser blocks local storage, game will still work
+  }
 }
 
 function showMessage(text: string) {
@@ -228,6 +249,11 @@ export function interact() {
       playScream()
       game.humanState = 'scared'
       game.screen = 'won'
+
+      if (game.night > game.best) {
+        game.best = game.night
+        saveProgress()
+      }
       
       if (game.night === NIGHTS.length) {
         confetti({ count: 150, spread: 90, position: { x: 50, y: 60 }, colors: ['#c9b8f7', '#ffd97a', '#d95b5f', '#d6e4ff', '#f2b48f']})
