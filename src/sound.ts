@@ -42,3 +42,7 @@ export function playWake() {
 export function playSunrise() {
   play('sunrise.ogg', 0.5)
 }
+
+export function playBooks() {
+  play('books.ogg')
+}

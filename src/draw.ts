@@ -521,7 +521,12 @@ function drawShelf(ctx: CanvasRenderingContext2D) {
   drawDark(ctx, bookcaseImg, 30, 131, 180, 261)
 
   for (const [x, y, size, color] of objects) {
-    drawDark(ctx, objectImgs[color], x, y, size, size)
+    let shake = 0
+    if (game.shelfShake > 0) {
+      shake = Math.sin(game.shelfShake*40+x) * 3 * game.shelfShake
+    }
+    
+    drawDark(ctx, objectImgs[color], x+shake, y, size, size)
   }
 }
 
