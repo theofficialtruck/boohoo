@@ -46,3 +46,7 @@ export function playSunrise() {
 export function playBooks() {
   play('books.ogg')
 }
+
+export function playWindow() {
+  play('window.ogg', 0.5)
+}

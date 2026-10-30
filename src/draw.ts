@@ -459,6 +459,13 @@ function drawRoom(ctx: CanvasRenderingContext2D) {
 }
 
 function drawWindow(ctx: CanvasRenderingContext2D) {
+  let shake = 0
+  if (game.windowRattle > 0) {
+    shake = Math.sin(game.windowRattle*50) * 3 * game.windowRattle
+  }
+  ctx.save()
+  ctx.translate(shake, 0)
+
   drawDark(ctx, windowImg, 238, 60, 155, 195)
 
   // the glass in the picture is grey, so paint the night over the three panes
@@ -483,6 +490,7 @@ function drawWindow(ctx: CanvasRenderingContext2D) {
     ctx.globalAlpha = 1
     ctx.drawImage(sunImg, 285, 232 - dawn * 60, 60, 60)
   }
+  ctx.restore()
   ctx.restore()
 }
 

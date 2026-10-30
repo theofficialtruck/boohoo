@@ -1,4 +1,4 @@
-import {playCombo, playBooks, playLamp, playRattle, playRoll, playScream, playSqueak, playSunrise, playThud, playWake,} from './sound'
+import {playCombo, playBooks, playLamp, playRattle, playRoll, playScream, playSqueak, playSunrise, playThud, playWake, playWindow,} from './sound'
 import { confetti } from '@tsparticles/confetti'
 
 export const WIDTH = 960
@@ -26,6 +26,10 @@ export const LAMP_Y = 264
 // middle of the lower shelves, where the E prompt shows up
 const SHELF_X = 107
 const SHELF_Y = 305
+
+// middle of window
+const WINDOW_X = 315
+const WINDOW_Y = 160
 
 const TOY_FLOOR_Y = 425
 export const BALL_Y = 458
@@ -75,6 +79,7 @@ export const game = {
   ghostLean: 0,
   lampFlicker: 0, // seconds of flickering left
   shelfShake: 0, // seconds of shaking left
+  windowRattle: 0, // seconds of rattling left
 
   // the toy's x/y is the bottom of its feet
   toyState: 'shelf', // 'shelf' | 'falling' | 'floor'
@@ -129,6 +134,7 @@ export function startGame() {
   game.ghostLean = 0
   game.lampFlicker = 0
   game.shelfShake = 0
+  game.windowRattle = 0
 
   game.toyState = 'shelf'
   game.toyX = 118
@@ -216,6 +222,10 @@ function scareAction(name: string) {
     points += 15
     showMessage('Spooky combo!')
     playCombo()
+  } else if (game.comboTimer > 0 && game.lastAction === 'window' && name === 'shelf') {
+    points += 15
+    showMessage('Spooky combo!')
+    playCombo()
   }
 
   game.scare = Math.min(100, game.scare + points)
@@ -245,6 +255,9 @@ export function nearbyObject() {
   }
   if (distance(game.ghostX, game.ghostY, SHELF_X, SHELF_Y) < REACH) {
     return 'shelf'
+  }
+  if (distance(game.ghostX, game.ghostY, WINDOW_X, WINDOW_Y) < REACH) {
+    return 'window'
   }
   return ''
 }
@@ -314,6 +327,12 @@ export function interact() {
     playBooks()
     scareAction('shelf')
   }
+
+  if (thing === 'window' && game.windowRattle <= 0) {
+    game.windowRattle = 0.8
+    playWindow()
+    scareAction('window')
+  }
 }
 
 export function squeak() {
@@ -359,6 +378,9 @@ export function update(dt: number) {
   }
   if (game.shelfShake > 0) {
     game.shelfShake -= dt
+  }
+  if (game.windowRattle > 0) {
+    game.windowRattle -= dt
   }
   if (game.toyWobble > 0) {
     game.toyWobble -= dt
