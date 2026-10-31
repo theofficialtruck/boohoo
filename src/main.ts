@@ -28,7 +28,7 @@ function endingDone() {
 }
 
 // show the button with the right label, or hide it while playing
-function updateMenuButton() {
+function updateMenuButton() { //
   let label = ''
   if (game.screen === 'title') label = 'Start'
   if (game.screen === 'instructions') label = game.night > 1 ? 'Play night ' + game.night : 'Play'
@@ -36,6 +36,7 @@ function updateMenuButton() {
   
   if (endingDone() && game.screen === 'won') {
     label = game.night < NIGHTS.length ? 'Next night' : 'Replay night 10'
+    if (game.night === 0) label = 'Start the game'
   }
 
   menuButton.hidden = label === ''
@@ -43,8 +44,9 @@ function updateMenuButton() {
     menuButton.textContent = label
   }
 
-  restartButton.hidden = !(endingDone() && game.screen === 'won')
-  const restartLabel = game.night < NIGHTS.length ? 'Try again' : 'Back to night 1'
+  restartButton.hidden = !((endingDone() && game.screen === 'won') || game.screen === 'instructions')
+  let restartLabel = game.night < NIGHTS.length ? 'Try again' : 'Back to night 1'
+  if (game.screen === 'instructions') restartLabel = 'Tutorial'
   if (restartButton.textContent !== restartLabel) {
     restartButton.textContent = restartLabel
   }
@@ -59,7 +61,9 @@ menuButton.addEventListener('click', () => {
 })
 
 restartButton.addEventListener('click', () => {
-  if (game.night === NIGHTS.length) {
+  if (game.screen === 'instructions') {
+    game.night = 0
+  } else if (game.night === NIGHTS.length) {
     game.night = 1
   }
   startGame()

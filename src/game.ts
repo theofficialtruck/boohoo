@@ -56,6 +56,19 @@ export const NIGHTS = [
   { energy: 7, fade: 18, combo: 2.5, sprint: 30, repeat: 0, sunrise: 50, creaky: true , burnt: true, restless: true },
 ]
 
+const TUTORIAL = { energy: 8, fade: 25, combo: 8, sprint: 20, repeat: 6, sunrise: 0, creaky: false, burnt: false, restless: false }
+
+export const TUTORIAL_STEPS = [
+  'You are a small ghost. You must fill the SCARE meter, then BOO the human. Float around with the arrows or WASD.',
+  'Float up to the toy on top of the bookcase and press E when you see the prompt.',
+  'DETECT bar went up! Another scare now would wake them up. Wait for it to drop below the line.',
+  'They settled down, and a ring showed up around your character. Press Q for a combo! On real nights, this will run out.',
+  'Hold shift while you move to sprint. It makes you faster, but fills the DETECT bar.',
+  'The wisps at the top of the screen is the limited amount of scares you have per night. Now go scare something else!',
+  'You must fill the SCARE bar. Repeat moves score less, so use combos like lamp then ball, or window then shelf.',
+  'The SCARE bar is full! Wait for them to settle down, then float to their bed and press E to BOO them.'
+]
+
 export const BOARDS = [
   [450, 392, 90, 31], // in front of nightstand
   [505, 467, 90, 41], // in middle of floor next to rug
@@ -112,9 +125,14 @@ export const game = {
   noLimits: false,
 
   paused: false, // will be true if the pause menu is activated
+  tutorialStep: 0, // which line is showing in TUTORIAL_STEPS
+  tutorialTimer: 0, // seconds sprinting in tutorial
 }
 
 export function currentNight() {
+  if (game.night === 0) {
+    return TUTORIAL
+  }
   return NIGHTS[game.night - 1]
 }
 
@@ -161,11 +179,17 @@ export function startGame() {
 
   game.message = ''
   game.messageTimer = 0
+  game.tutorialStep = 0
+  game.tutorialTimer = 0
+
   saveProgress()
 }
 
 export function nextNight() {
-  if (game.night < NIGHTS.length) {
+  if (game.night === 0) {
+    game.night = 1
+    loadProgress()
+  } else if (game.night < NIGHTS.length) {
     game.night += 1
   }
   startGame()
@@ -173,6 +197,10 @@ export function nextNight() {
 
 // localStorage will keep things even after a refresh
 function saveProgress() {
+  if (game.night === 0) {
+    return
+  }
+
   try {
     localStorage.setItem('boohoo-night', String(game.night))
     localStorage.setItem('boohoo-best', String(game.best))
@@ -196,6 +224,12 @@ function showMessage(text: string) {
 }
 
 function wakeUpTooSoon() {
+  if (game.night === 0) {
+    game.detection = Math.min(game.detection, 99)
+    showMessage('Wait for the line!')
+    return
+  }
+
   playWake()
   game.humanState = 'awake'
   game.screen = 'lost'
@@ -357,6 +391,30 @@ export function skipNight() {
   showMessage('Go BOO them!')
 }
 
+function updateTutorial(dt: number, sprinting: boolean) {
+  if (game.energy <= 0) {
+    game.energy = TUTORIAL.energy
+  }
+
+  const step = game.tutorialStep
+  let done = false
+  if (step === 0) done = distance(game.ghostX, game.ghostY, 120, 240) > 60
+  if (step === 1) done = game.lastAction === 'toy'
+  if (step === 2) done = game.comboTimer > 0
+  if (step === 3) {
+    done = game.lastAction === 'squeak'
+    if (!done) game.comboTimer = TUTORIAL.combo
+  }
+  if (step === 4) {
+    if (sprinting) game.tutorialTimer += dt
+    done = game.tutorialTimer > 0.6
+  }
+  if (step === 5) done = game.lastAction !== 'squeak'
+  if (step === 6) done = game.scare >= 100
+
+  if (done) game.tutorialStep += 1
+}
+
 export function update(dt: number) {
   if (game.paused) {
     return
@@ -502,6 +560,8 @@ export function update(dt: number) {
     game.energy = currentNight().energy
     game.timeLeft = currentNight().sunrise
   }
+
+  if (game.night === 0) updateTutorial(dt, sprinting)
 
   if (game.detection >= 100) {
     wakeUpTooSoon()

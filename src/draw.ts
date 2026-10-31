@@ -1,4 +1,4 @@
-import { game, WIDTH, HEIGHT, LAMP_X, LAMP_Y, BALL_Y, BALL_RADIUS, currentNight, HEAD_X, HEAD_Y, END_DELAY, SAFE_DETECTION, nearbyObject, BOARDS, ghostOnBoard, NIGHTS, } from './game'
+import { game, WIDTH, HEIGHT, LAMP_X, LAMP_Y, BALL_Y, BALL_RADIUS, currentNight, HEAD_X, HEAD_Y, END_DELAY, SAFE_DETECTION, nearbyObject, BOARDS, ghostOnBoard, NIGHTS, TUTORIAL_STEPS} from './game'
 
 const FLOOR_Y = 390
 
@@ -104,6 +104,7 @@ export function draw(ctx: CanvasRenderingContext2D) {
     drawFinalPrompt(ctx)
     drawPrompt(ctx)
     drawMessage(ctx)
+    drawTutorialText(ctx)
     drawHud(ctx)
     drawDevMenu(ctx)
   }
@@ -135,9 +136,12 @@ function drawInstructions(ctx: CanvasRenderingContext2D) {
     ['BOO', 'must E at the bed when this comes up'],
   ]
 
-  // keys on the left, what they do on the right
+  drawRows(ctx, rows, 140)
+}
+
+function drawRows(ctx: CanvasRenderingContext2D, rows: string[][], startY: number) {
   for (let i = 0; i < rows.length; i++) {
-    const y = 140 + i * 34
+    const y = startY + i * 34
     ctx.font = '700 18px "Segoe UI", system-ui, sans-serif'
     ctx.textAlign = 'right'
     ctx.fillStyle = LAVENDER
@@ -147,6 +151,47 @@ function drawInstructions(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = MOON
     ctx.fillText(rows[i][1], 392, y)
   }
+}
+
+function drawTutorialText(ctx: CanvasRenderingContext2D) {
+  if (game.night !== 0) {
+    return
+  }
+
+  const text = TUTORIAL_STEPS[game.tutorialStep]
+  ctx.font = '600 17px "Segoe UI", system-ui, sans-serif'
+  const boxWidth = ctx.measureText(text).width + 30
+
+  rect(ctx, 'rgba(8, 11, 30, 0.85)', WIDTH/2 - boxWidth/2, 488, boxWidth, 36)
+  ctx.fillStyle = MOON
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(text, WIDTH/2, 506)
+}
+
+function drawTutorialEnd(ctx: CanvasRenderingContext2D) {
+  ctx.fillStyle = 'rgba(8, 11, 30, 0.4)'
+  ctx.fillRect(0, 0, WIDTH, HEIGHT)
+
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.font = '900 44px "Arial Rounded MT Bold", "Segoe UI Black", "Arial Black", sans-serif'
+  ctx.lineJoin = 'round'
+  ctx.lineWidth = 10
+  ctx.strokeStyle = INDIGO
+  ctx.strokeText('Coming up next', WIDTH/2, 62)
+  ctx.fillStyle = LAVENDER
+  ctx.fillText('Coming up next', WIDTH/2, 62)
+
+  drawRows(ctx, [
+    ['Sunrise clock', 'night 2: BOO before the sun comes up'],
+    ['Fewer scares', 'night 4: only 7 wisps, and DETECT bar fades slower'],
+    ['Creaky boards', 'night 5: lighter boards make noise, float around them'],
+    ['Burnt lamp', 'night 6: the lamp stops working'],
+    ['Restless human', 'night 7: they toss around and fill DETECT bar'],
+    ['Harder combos', 'night 8: shorter combo ring and noisier sprint'],
+    ['No repeats', 'night 9: the same scare twice scores nothing anymore'],
+  ], 115)
 }
 
 function drawComboRing(ctx: CanvasRenderingContext2D) {
@@ -218,6 +263,12 @@ function drawEnd(ctx: CanvasRenderingContext2D) {
   ctx.globalAlpha = fade
   ctx.fillStyle = 'rgba(8, 11, 30, 0.5)'
   ctx.fillRect(0, 0, WIDTH, HEIGHT)
+
+  if (game.screen === 'won' && game.night === 0) {
+    drawTutorialEnd(ctx)
+    ctx.restore()
+    return
+  }
 
   let title = 'Out of spooks'
   let line = 'The sun is coming up.'
@@ -291,7 +342,7 @@ function drawHud(ctx: CanvasRenderingContext2D) {
   ctx.fillText('SCARES LEFT', 422, 38)
 
   ctx.textAlign = 'right'
-  ctx.fillText('NIGHT ' + game.night, 890, 27)
+  ctx.fillText(game.night === 0 ? 'TUTORIAL' : 'NIGHT ' + game.night, 890, 27)
 
   if (currentNight().sunrise > 0) {
     ctx.fillStyle = game.timeLeft < 10 ? DANGER : LAVENDER
