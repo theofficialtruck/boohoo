@@ -236,11 +236,11 @@ function drawMessage(ctx: CanvasRenderingContext2D) {
   // fade out over the last bit
   const alpha = Math.min(1, game.messageTimer / 0.4)
   ctx.fillStyle = `rgba(201, 184, 247, ${alpha})`
-  ctx.font = '700 22px "Segoe UI", system-ui, sans-serif'
+  ctx.font = '700 20px "Segoe UI", system-ui, sans-serif'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   // to the right of the wisps so they don't overlap
-  ctx.fillText(game.message, 700, 40)
+  ctx.fillText(game.message, 650, 40)
 }
 
 function sunIsUp() {
