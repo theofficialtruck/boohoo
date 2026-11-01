@@ -279,6 +279,10 @@ function drawEnd(ctx: CanvasRenderingContext2D) {
     if (game.night === NIGHTS.length) {
       title = 'You beat the game!'
       line = 'Ten nights & one ghost'
+
+      if (game.newColors) {
+        line = 'New ghost colors unlocked! Pick one in the pause menu'
+      }
     }
   } else if (game.loseReason === 'out of time') {
     title = 'Out of time'
@@ -447,11 +451,11 @@ function drawGhost(ctx: CanvasRenderingContext2D, x: number, y: number, lean: nu
   ctx.rotate(lean)
   ctx.scale(size * (1 + squish * 0.2), size * (1 - squish * 0.15))
 
-  circle(ctx, 'rgba(201, 184, 247, 0.12)', 0, 0, 28)
+  circle(ctx, game.ghostColor + '20', 0, 0, 28)
 
   // little curl on top
   const curl = Math.sin(t * 6) * 2
-  ctx.strokeStyle = LAVENDER
+  ctx.strokeStyle = game.ghostColor
   ctx.lineWidth = 3
   ctx.lineCap = 'round'
   ctx.beginPath()
@@ -459,7 +463,7 @@ function drawGhost(ctx: CanvasRenderingContext2D, x: number, y: number, lean: nu
   ctx.quadraticCurveTo(-4 + curl, -24, 3 + curl, -25)
   ctx.stroke()
 
-  ctx.fillStyle = LAVENDER
+  ctx.fillStyle = game.ghostColor
   ctx.beginPath()
   ctx.moveTo(0, -16)
   ctx.bezierCurveTo(10, -16, 13, -2, 14, 12)

@@ -124,6 +124,16 @@ body {
   /* kudos if you're actually reading every line of this*/
 }
 
+#colorArea {
+  text-align: center;
+}
+
+#colorList button {
+  width: 2.5em;
+  height: 2.2em;
+  vertical-align: middle;
+}
+
 #pause[hidden], #pauseMenu[hidden] {
   display: none;
 }

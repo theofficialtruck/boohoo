@@ -1,4 +1,4 @@
-import { game, interact, keys, squeak, startGame, nextNight, update, END_DELAY, NIGHTS, skipNight, loadProgress } from './game'
+import { game, interact, keys, squeak, startGame, nextNight, update, END_DELAY, NIGHTS, skipNight, loadProgress, GHOST_COLORS, pickColor } from './game'
 import { draw } from './draw'
 
 const canvas = document.querySelector<HTMLCanvasElement>('#screen')!
@@ -8,6 +8,8 @@ const restartButton = document.querySelector<HTMLButtonElement>('#restart')!
 const pauseButton = document.querySelector<HTMLButtonElement>('#pause')!
 const pauseMenu = document.querySelector<HTMLDivElement>('#pauseMenu')!
 const nightList = document.querySelector<HTMLDivElement>('#nightList')!
+const colorArea = document.querySelector<HTMLDivElement>('#colorArea')!
+const colorList = document.querySelector<HTMLDivElement>('#colorList')!
 
 // the one button does whatever the current screen needs
 function pressMenu() {
@@ -85,6 +87,28 @@ function openPause() {
       playNight(night)
     })
     nightList.appendChild(button)
+  }
+
+  showColors()
+}
+
+function showColors() {
+  colorArea.hidden = game.best < NIGHTS.length
+
+  colorList.innerHTML = ''
+  for (const color of GHOST_COLORS) {
+    const button = document.createElement('button')
+    button.style.background = color.hex
+    button.style.color = '#151b3d'
+    button.title = color.name
+    if (color.hex === game.ghostColor) {
+      button.textContent = '✔'
+    }
+    button.addEventListener('click', () => {
+      pickColor(color.hex)
+      showColors()
+    })
+    colorList.appendChild(button)
   }
 }
 

@@ -69,6 +69,16 @@ export const TUTORIAL_STEPS = [
   'The SCARE bar is full! Wait for them to settle down, then float to their bed and press E to BOO them.'
 ]
 
+export const GHOST_COLORS = [
+  { name: 'Lavender', hex: '#c9b8f7' },
+  { name: 'White', hex: '#f5f5f5' },
+  { name: 'Pink', hex: '#ff8fc8' },
+  { name: 'Red', hex: '#ff5c5c' },
+  { name: 'Orange', hex: '#ffa64d'},
+  { name: 'Yellow', hex: '#ffe066' },
+  { name: 'Mint', hex: '#6ee7a8' },
+]
+
 export const BOARDS = [
   [450, 392, 90, 31], // in front of nightstand
   [505, 467, 90, 41], // in middle of floor next to rug
@@ -126,7 +136,10 @@ export const game = {
 
   paused: false, // will be true if the pause menu is activated
   tutorialStep: 0, // which line is showing in TUTORIAL_STEPS
-  tutorialTimer: 0, // seconds sprinting in tutorial
+  tutorialTimer: 0, // seconds sprinting in tutorial'
+
+  ghostColor: '#c9b8f7', // saved in browser
+  newColors: false, // true after finished night 10 first time
 }
 
 export function currentNight() {
@@ -181,6 +194,7 @@ export function startGame() {
   game.messageTimer = 0
   game.tutorialStep = 0
   game.tutorialTimer = 0
+  game.newColors = false
 
   saveProgress()
 }
@@ -197,25 +211,26 @@ export function nextNight() {
 
 // localStorage will keep things even after a refresh
 function saveProgress() {
-  if (game.night === 0) {
-    return
-  }
-
   try {
-    localStorage.setItem('boohoo-night', String(game.night))
+    if (game.night !== 0) {
+      localStorage.setItem('boohoo-night', String(game.night))
+    }
     localStorage.setItem('boohoo-best', String(game.best))
-  } catch {
-    // if the browser blocks local storage, game will still work
-  }
+    localStorage.setItem('boohoo-color', game.ghostColor)
+  } catch {}
+}
+
+export function pickColor(hex: string) {
+  game.ghostColor = hex
+  saveProgress()
 }
 
 export function loadProgress() {
   try {
     game.night = Number(localStorage.getItem('boohoo-night')) || 1
     game.best = Number(localStorage.getItem('boohoo-best')) || 0
-  } catch {
-    // if the browser blocks local storage, game will still work
-  }
+    game.ghostColor = localStorage.getItem('boohoo-color') || game.ghostColor
+  } catch {}
 }
 
 function showMessage(text: string) {
@@ -310,6 +325,9 @@ export function interact() {
 
       if (game.night > game.best) {
         game.best = game.night
+        if (game.best === NIGHTS.length) {
+          game.newColors = true
+        }
         saveProgress()
       }
       
