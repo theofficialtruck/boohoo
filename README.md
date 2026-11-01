@@ -9,7 +9,9 @@ You can press escape or press the 2 grey lines in the top right corner of the ga
 
 The game does remember your progress even if you refresh or close the tab. Data is saved into the browser, so as long as you do not clear your browser data, it will not reset you. When you beat night 10... a special thing happens, but no spoilers! AI was used for creating the original project structure and boilerplate to help me get started, resolving merge conflicts, helped me with the math and physics functions, helped me find free assets online, and helped me with the brainstorming of some feature ideas to add.
 
-Quick list of things you can scare with:
+This project was built using TypeScript, Vite, and HTML canvas. You can visit and play the game at https://playboohoo.vercel.app/
+
+## Quick list of things you can scare with:
 - the lamp on the cabinet (before night 6)
 - the toy on the shelf (and the floor once you knock it off)
 - the ball on the floor
@@ -22,9 +24,7 @@ Combos give you extra points on the SCARE bar, but you must do it quick enough b
 - the toy, then your squeak
 - the window, then the bookshelf
 
-This project was built using TypeScript, Vite, and HTML canvas. You can visit and play the game at https://playboohoo.vercel.app/
-
-Credits:
+## Credits:
 - [Furniture](https://opengameart.org/content/glitch-furniture-svg): "Glitch Furniture (SVG)" by Tiny Speck in OpenGameArt (CC0 license)
 - [Shelf objects and sound effects](https://kenney.nl/assets/impact-sounds): Kenney (kenney.nl): Puzzle Pack 2, Impact Sounds, Interface Sounds, Music Jingles (CC0 license)
 - [Squeak](https://opengameart.org/content/mouse-imitation): "Mouse Imitation" by AntumDeluge in OpenGameArt (CC0 license)
